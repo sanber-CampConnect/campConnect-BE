@@ -30,6 +30,8 @@ const credentials = {
     }
 }
 
+console.log(credentials[process.env.NODE_ENV].host)
+
 // Create the connection pool. The pool-specific settings are the defaults
 const pool = mysql.createPool({
   host: credentials[process.env.NODE_ENV].host,
