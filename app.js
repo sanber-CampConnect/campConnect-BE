@@ -9,7 +9,7 @@ const credentials = {
         user: process.env.DEVEL_DB_USER,
         database: process.env.DEVEL_DB_NAME,
         password: process.env.DEVEL_DB_PASS,
-        port: process.env.DEVEL_DB_PASS,
+        port: process.env.DEVEL_DB_PORT,
         secret: process.env.DEVEL_JWT_SECRET
     },
     "STAGING": {
@@ -17,7 +17,7 @@ const credentials = {
         user: process.env.STAGING_DB_USER,
         database: process.env.STAGING_DB_NAME,
         password: process.env.STAGING_DB_PASS,
-        port: process.env.STAGING_DB_PASS,
+        port: process.env.STAGING_DB_PORT,
         secret: process.env.STAGING_JWT_SECRET
     },
     "PRODUCTION": {
@@ -25,11 +25,13 @@ const credentials = {
         user: process.env.PRODUCTION_DB_USER,
         database: process.env.PRODUCTION_DB_NAME,
         password: process.env.PRODUCTION_DB_PASS,
-        port: process.env.PRODUCTION_DB_PASS,
+        port: process.env.PRODUCTION_DB_PORT,
         secret: process.env.PRODUCTION_JWT_SECRET
     }
 }
 
+console.log(process.env.NODE_ENV)
+console.log(credentials[process.env.NODE_ENV])
 console.log(credentials[process.env.NODE_ENV].host)
 
 // Create the connection pool. The pool-specific settings are the defaults
