@@ -10,7 +10,7 @@ ROUTER.use("/", async(req, res, next) => {
                 data: result
             })
         })
-        .catch((err) => { next(err) })
+        .catch((err) => { next({code: "sql_error", detail: err}) })
 });
 
 export default ROUTER;
