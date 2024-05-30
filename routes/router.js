@@ -1,8 +1,12 @@
 import express from "express";
+import connection from "../models/DBConnection.js"
 
 const ROUTER = express.Router();
-ROUTER.use("/", (req, res, next) => {
-    res.send({ msg: "Hello from campConnect" })
+ROUTER.use("/", async(req, res, next) => {
+    return res.send({
+        msg: "hello from CampConnect",
+        data: await connection.testQuery()
+    })
 });
 
 export default ROUTER;
