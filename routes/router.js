@@ -3,10 +3,14 @@ import connection from "../models/DBConnection.js"
 
 const ROUTER = express.Router();
 ROUTER.use("/", async(req, res, next) => {
-    return res.send({
-        msg: "hello from CampConnect",
-        data: await connection.testQuery()
-    })
+    await connection.testQuery()
+        .then((result) => {
+            return res.send({
+                msg: "hello from CampConnect",
+                data: result
+            })
+        })
+        .catch((err) => { next(err) })
 });
 
 export default ROUTER;
