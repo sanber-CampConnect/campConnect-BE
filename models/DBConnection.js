@@ -36,10 +36,19 @@ export default {
         }
     },
 
-    testQuery: function() {
-        return new Promise(async (resolve, reject) => {
-            const [rows, fields] =  await pool.query('SELECT * FROM `test`');
-            resolve(rows);
-        })
+    testQuery: async function() {
+        try {
+            const [rows, fields] =  await pool.query('SELEC * FROM `test`');
+            return rows;
+        } catch(err) {
+            throw(err)
+        }
+    },
+
+    query: async function(query) {
+        try {
+            const [rows, fields] =  await pool.query(query);
+            return rows;
+        } catch(err) { throw(err) }
     }
 }
