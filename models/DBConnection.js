@@ -38,7 +38,7 @@ export default {
 
     testQuery: async function() {
         try {
-            const [rows, fields] =  await pool.query('SELEC * FROM `test`');
+            const [rows, fields] =  await pool.query('SELECT * FROM `test`');
             return rows;
         } catch(err) {
             throw(err)

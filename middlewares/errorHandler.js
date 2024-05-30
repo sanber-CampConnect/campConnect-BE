@@ -1,9 +1,12 @@
 import dotenv from "dotenv";
-dotenv.config();
 
+import ERRORS from "../configs/error.js"
+
+dotenv.config();
 export default function errorHandler(err, req, res, next) {
-    return res.status(500).send({
-        message: "error happened",
-        log: (process.env.NODE_ENV == "DEVEL"? err: "[DISCLOSED]")
+    const {status_code, msg} = ERRORS[err.code] || {status_code: 500, msg: "Unknown server error"};
+    return res.status(status_code).send({
+        message: msg,
+        log: (process.env.NODE_ENV == "DEVEL"? err.detail: "[DISCLOSED]")
     })
 }
