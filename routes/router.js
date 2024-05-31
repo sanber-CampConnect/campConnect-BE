@@ -1,9 +1,11 @@
 import express from "express";
+import user from "../controllers/user.controller.js"
 import connection from "../models/DBConnection.js"
 
 const ROUTER = express.Router();
-ROUTER.use("/", async(req, res, next) => {
-    await connection.testQuery()
+ROUTER.use("/user", user.index)
+ROUTER.use("/", (req, res, next) => {
+    connection.query("SELECT SLEEP(4)")
         .then((result) => {
             return res.send({
                 msg: "hello from CampConnect",
