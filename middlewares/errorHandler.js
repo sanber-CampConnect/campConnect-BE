@@ -8,6 +8,7 @@ export default function errorHandler(err, req, res, next) {
     const {status_code, msg} = ERRORS[err.code] || {status_code: 500, msg: "Unknown server error"};
     return res.status(status_code).send({
         message: msg,
+        info: err?.msg,
         log: (process.env.NODE_ENV == "DEVEL"? err.detail: undefined)
     })
 }
