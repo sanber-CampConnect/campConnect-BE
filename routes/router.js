@@ -1,16 +1,18 @@
 import express from "express";
-import connection from "../models/DBConnection.js"
+
+// CRUD (Direct access for admins only)
+import userRouter from "./user.route.js";
+
+// Frontend
+import profileRouter from "./profile.route.js"
 
 const ROUTER = express.Router();
-ROUTER.use("/", async(req, res, next) => {
-    await connection.testQuery()
-        .then((result) => {
-            return res.send({
-                msg: "hello from CampConnect",
-                data: result
-            })
-        })
-        .catch((err) => { next({code: "sql_error", detail: err}) })
+ROUTER.use("/user", userRouter);
+ROUTER.use("/profile", profileRouter);
+ROUTER.use("/", (req, res, next) => {
+    return res.send({
+        msg: "hello from CampConnect",
+    })
 });
 
 export default ROUTER;
