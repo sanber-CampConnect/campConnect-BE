@@ -1,26 +1,26 @@
 import model from "../models/Users.js";
 
+const FILLABLES = ["name", "email", "phone", "role", "image", "is_verified", "password"];
+
 export default {
     index: function(req, res, next) {
         model.getAll()
             .then((result) => {
-                return res.send({
-                    msg: "hello from CampConnect",
-                    data: result
-                })
+                return res.send({ data: result })
             })
             .catch((err) => {
                 next({code: "sql_error", detail: err})
             })
-
-        // return res.send({
-        //     msg: "hello from CampConnect",
-        //     data: model.getAll()
-        // })
     },
 
     findOne: function(req, res, next) {
-
+        model.getById(1)
+            .then((result) => {
+                return res.send({ data: result })
+            })
+            .catch((err) => {
+                next({code: "sql_error", detail: err})
+            })
     },
     
     store: function(req, res, next) {

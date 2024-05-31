@@ -1,18 +1,18 @@
 import express from "express";
-import user from "../controllers/user.controller.js"
-import connection from "../models/DBConnection.js"
+
+// CRUD (Direct access for admins only)
+import userRouter from "./user.route.js";
+
+// Frontend
+import profileRouter from "./profile.route.js"
 
 const ROUTER = express.Router();
-ROUTER.use("/user", user.index)
+ROUTER.use("/user", userRouter);
+ROUTER.use("/profile", profileRouter);
 ROUTER.use("/", (req, res, next) => {
-    connection.query("SELECT SLEEP(4)")
-        .then((result) => {
-            return res.send({
-                msg: "hello from CampConnect",
-                data: result
-            })
-        })
-        .catch((err) => { next({code: "sql_error", detail: err}) })
+    return res.send({
+        msg: "hello from CampConnect",
+    })
 });
 
 export default ROUTER;

@@ -36,9 +36,9 @@ export default {
         }
     },
 
-    query: async function(query) {
+    query: async function(sql, params) {
         try {
-            const [rows, fields] =  await pool.query(query);
+            const [rows, fields] =  await pool.query(sql, params);
             return rows
         } catch(err) { 
             throw(err)
