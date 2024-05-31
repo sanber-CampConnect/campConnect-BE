@@ -1,12 +1,16 @@
+DROP DATABASE IF EXISTS campConnect;
+CREATE DATABASE campConnect;
+USE campConnect;
+
 CREATE TABLE Users(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(64) NOT NULL,
     email VARCHAR(64) UNIQUE NOT NULL,
     password VARCHAR(64) NOT NULL,
-    phone VARCHAR(16) NOT NULL,
-    role ENUM("customer", "admin") NOT NULL,
+    phone VARCHAR(16) NOT NULL DEFAULT "",
+    role ENUM("customer", "admin") NOT NULL DEFAULT "customer",
     image VARCHAR(64),
-    is_verified BOOLEAN NOT NULL
+    is_verified BOOLEAN NOT NULL DEFAULT False
 );
 
 CREATE TABLE Categories(
@@ -21,7 +25,7 @@ CREATE TABLE Transactions(
     method ENUM("tunai", "transfer") NOT NULL,
     is_paid BOOLEAN NOT NULL,
     total_items INTEGER UNSIGNED NOT NULL,
-    total_price INTEGER UNSIGNED NOT NULL,
+    total_price INTEGER UNSIGNED NOT NULL
 );
 
 CREATE TABLE Products(
@@ -31,7 +35,7 @@ CREATE TABLE Products(
     image VARCHAR(64) NOT NULL,
     description VARCHAR(2048) NOT NULL,
     care_procedure VARCHAR(2048) NOT NULL,
-    date_added DATE DEFAULT CURRENT_DATE(),
+    date_added DATETIME DEFAULT NOW(),
 
     FOREIGN KEY (category_id) 
         REFERENCES Categories(id)
@@ -56,18 +60,18 @@ CREATE TABLE Announcements(
     content VARCHAR(4096) NOT NULL,
 
     FOREIGN KEY (user_id)
-        REFERENCES Users(id),
+        REFERENCES Users(id)
 );
 
 CREATE TABLE Notifications(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     user_id INTEGER NOT NULL,
     message VARCHAR(512) NOT NULL,
-    send_date DATE NOT NULL,
+    send_date DATETIME NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT False,
 
     FOREIGN KEY (user_id)
-        REFERENCES Users(id),
+        REFERENCES Users(id)
 ); 
 
 CREATE TABLE Carts(
@@ -75,7 +79,7 @@ CREATE TABLE Carts(
     user_id INTEGER NOT NULL,
 
     FOREIGN KEY (user_id)
-        REFERENCES Users(id),
+        REFERENCES Users(id)
 );
 
 CREATE TABLE UseProcedures(
@@ -84,21 +88,21 @@ CREATE TABLE UseProcedures(
     description VARCHAR(512) NOT NULL,
     step INTEGER NOT NULL,
 
-    FOREIGN KEY product_id
-        REFERENCES Products(id),
+    FOREIGN KEY (product_id)
+        REFERENCES Products(id)
 );
 
 CREATE TABLE Orders(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     user_id INTEGER NOT NULL,
     transaction_id INTEGER NOT NULL,
-    payment_due DATE NOT NULL,
+    payment_due DATETIME NOT NULL,
     status ENUM("belum_bayar", "sedang_disewa", "selesai", "dibatalkan") NOT NULL DEFAULT "belum_bayar",
-    last_update DATE NOT NULL DEFAULT CURRENT_DATE(),
+    last_update DATETIME NOT NULL DEFAULT NOW(),
 
-    FOREIGN KEY user_id
+    FOREIGN KEY (user_id)
         REFERENCES Users(id),
-    FOREIGN KEY transaction_id
+    FOREIGN KEY (transaction_id)
         REFERENCES Transactions(id)
 );
 
@@ -108,7 +112,7 @@ CREATE TABLE Reviews(
     title VARCHAR(32) NOT NULL,
     comment VARCHAR(1024) NOT NULL,
 
-    FOREIGN key order_id
+    FOREIGN key (order_id)
         REFERENCES Orders(id)
 ); 
 
@@ -117,11 +121,11 @@ CREATE TABLE CartItems(
     cart_id INTEGER NOT NULL, 
     product_id INTEGER NOT NULL,
     marked_ordered BOOLEAN NOT NULL,
-    rent_duration INTEGER UNISIGNED NOT NULL
+    rent_duration INTEGER UNSIGNED NOT NULL,
 
-    FOREIGN KEY cart_id
+    FOREIGN KEY (cart_id)
         REFERENCES Carts(id),
-    FOREIGN KEY product_id
+    FOREIGN KEY (product_id)
         REFERENCES Products(id)
 );
 
@@ -131,17 +135,16 @@ CREATE TABLE OrderItems(
     order_id INTEGER NOT NULL,
     rent_duration INTEGER UNSIGNED NOT NULL,
 
-    FOREIGN KEY product_id
+    FOREIGN KEY (product_id)
         REFERENCES Products(id),
-    FOREIGN KEY order_id
+    FOREIGN KEY (order_id)
         REFERENCES Orders(id)
 );
 
 CREATE TABLE Rents(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     orderItem_id INTEGER NOT NULL,
-    rent_start DATE NOT NULL,
-    rent_due DATE NOT NULL,
-    return_date DATE
+    rent_start DATETIME NOT NULL,
+    rent_due DATETIME NOT NULL,
+    return_date DATETIME
 );
-
