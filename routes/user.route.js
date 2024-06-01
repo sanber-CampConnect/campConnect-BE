@@ -1,6 +1,7 @@
 import express from "express";
 import controller from "../controllers/user.controller.js"
 
+// TODO: Protect using RBAC
 const ROUTER = express.Router();
 ROUTER.get("/", controller.index);
 ROUTER.post("/", controller.store);
