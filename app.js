@@ -14,7 +14,7 @@ const PORT = {
   "PRODUCTION": process.env.PRODUCTION_PORT,
 }[process.env.NODE_ENV];
 
-// APP.use(logger);
+APP.use(logger);
 APP.use(express.json());
 APP.use(bodyParser.urlencoded({extended: true}));
 APP.use(router);

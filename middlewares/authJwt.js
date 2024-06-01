@@ -11,14 +11,10 @@ const secret = {
 export default function authJWT(req, res, next) {
     const token = req.headers.authorization?.replace("Bearer ", "");
 
-    if (!token) {
-        return res.status(401).json({ code: "token_missing_or_invalid", message: "No token provided" });
-    }
+    if (!token) return next({code: "no_token", msg: "No token provided"})
 
     jwt.verify(token, secret[process.env.NODE_ENV], (err, decodedData) => {
-        if (err) {
-            return res.status(403).json({ code: "token_invalid", message: "Invalid token" });
-        }
+        if (err) return next({code: "invalid_token", msg: "Token may be invalid or expired. Try to login again"})
 
         req.id = decodedData.id;
         req.role = decodedData.role;
