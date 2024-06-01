@@ -2,20 +2,16 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 
+import config from "../configs/jwt.js";
 import Users from "../models/Users.js";
 
 dotenv.config();
-const secret = {
-    "DEVEL": process.env.DEVEL_JWT_SECRET,
-    "STAGING": process.env.STAGING_JWT_SECRET,
-    "PRODUCTION": process.env.PRODUCTION_JWT_SECRET,
-}
 
 function generateToken(userInfo, onError, onSuccess) {
     jwt.sign(
         userInfo, 
-        secret[process.env.NODE_ENV],
-        { expiresIn: 60*60*3 },
+        config[process.env.NODE_ENV].secret,
+        { expiresIn: 60*60*config[process.env.NODE_ENV].lifetime },
         (err, token) => err? onError(err): onSuccess(token)
     );
 }
