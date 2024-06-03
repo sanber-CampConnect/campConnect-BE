@@ -8,11 +8,7 @@ import logger from "./middlewares/logger.js";
 
 dotenv.config();
 const APP = express();
-const PORT = {
-  "DEVEL": process.env.DEVEL_PORT,
-  "STAGING": process.env.STAGING_PORT,
-  "PRODUCTION": process.env.PRODUCTION_PORT,
-}[process.env.NODE_ENV];
+const PORT = process.env.PORT || 3000;
 
 APP.use(logger);
 APP.use(express.json());
