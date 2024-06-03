@@ -1,15 +1,15 @@
 import mysql from 'mysql2/promise';
-import config from "../configs/db.js";
+import dbConfig from "../configs/db.js";
 import dotenv from "dotenv";
 dotenv.config();
 
 // Create the connection pool. The pool-specific settings are the defaults
 const pool = mysql.createPool({
-  host: config[process.env.NODE_ENV].host,
-  user: config[process.env.NODE_ENV].user,
-  database: config[process.env.NODE_ENV].database,
-  password: config[process.env.NODE_ENV].password,
-  port: config[process.env.NODE_ENV].port,
+  host: dbConfig.host,
+  user: dbConfig.user,
+  database: dbConfig.database,
+  password: dbConfig.password,
+  port: dbConfig.port,
   waitForConnections: true,
   connectionLimit: 10,
   maxIdle: 10, // max idle connections, the default value is the same as `connectionLimit`
