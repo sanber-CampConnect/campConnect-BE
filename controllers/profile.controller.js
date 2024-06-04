@@ -1,6 +1,6 @@
 import model from  '../models/Users.js';
 import bcrypt from 'bcryptjs';
-import connection from '../configs/db.js';
+import connection from '../models/DBConnection.js';
 
 export const getProfile = (req, res, next) => {
     const userId = req.user.id;
@@ -10,7 +10,7 @@ export const getProfile = (req, res, next) => {
             if (result.length == 0) return next({code: "not_found", msg: "User not found"})
             return res.send({ data: result });
         })
-        .catch(err => next({code: "sql_error", detail: err}))
+        .catch(err => next(err))
 };
 
 export const updateProfile = (req, res, next) => {
@@ -26,13 +26,13 @@ export const updateProfile = (req, res, next) => {
         return next({code: "bad_request", msg: "No processable data being supplied to server"})
     }
 
-    const userId = Number(req.body.id) //user.id;
+    const userId = Number(req.user.id);
     model.updateById(userId, updatedUser)
         .then(result => {
             if(result.affectedRows === 0) return next({code: "not_found", msg: 'User not found'});
             return res.send({ msg: 'Profile updated successfully' });
         })
-        .catch(err => next({code: "sql_error", detail: err}));
+        .catch(err => next(err));
 };
 
 export const updatePassword = (req, res, next) => {
@@ -44,7 +44,7 @@ export const updatePassword = (req, res, next) => {
     if(invalidRequest) return next({code: "bad_request", msg: "Need both current password and new password data"})
 
     const { currentPassword, newPassword } = req.body;
-    const userId = req.body.id;
+    const userId = req.user.id;
     model.getById(userId)
         .then(result => {
             if (result.length == 0) return next({code: "not_found", msg: "User not found"})
@@ -54,10 +54,10 @@ export const updatePassword = (req, res, next) => {
             if (!passwordMatch) return res.status(400).json({ message: 'Current password is incorrect' });
 
             const hashedPassword = bcrypt.hashSync(newPassword, 10);
-            const sql = 'UPDATE users SET password = ? WHERE id = ?';
+            const sql = 'UPDATE Users SET password = ? WHERE id = ?';
             connection.query(sql, [hashedPassword, userId])
                 .then(result => res.send({ message: 'Password updated successfully' }) )
-                .catch(err => next({code: "sql_error", detail: err}))
+                .catch(err => next(err))
         })
-        .catch(err => next({code: "sql_error", detail: err}))
+        .catch(err => next(err))
 };

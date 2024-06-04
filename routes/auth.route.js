@@ -4,7 +4,8 @@ const ROUTER = express.Router();
 
 ROUTER.post("/register", controller.register);
 ROUTER.post("/login", controller.login);
-ROUTER.get("/forgotPassword", controller.resetPassword);
-ROUTER.get("/verifyAccount/:hash", controller.verifyAccount);
+ROUTER.post("/requestVerification", controller.sendVerificationEmail);
+ROUTER.post("/forgotPassword", controller.resetPassword);
+ROUTER.get("/verifyAccount", controller.verifyAccount);
 
 export default ROUTER;

@@ -13,7 +13,7 @@ const FRONTEND_MIDDLEWARES = [authJWT]
 const ADMIN_MIDDLEWARES = [authJWT]
 
 ROUTER.use("/auth", authRouter);
-ROUTER.use("/profiles", FRONTEND_MIDDLEWARES, profileRouter);
+ROUTER.use("/profile", FRONTEND_MIDDLEWARES, profileRouter);
 ROUTER.use("/users", ADMIN_MIDDLEWARES, userRouter);
 ROUTER.use("/", (req, res) => res.send({msg: "hello from CampConnect"}));
 

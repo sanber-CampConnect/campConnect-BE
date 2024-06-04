@@ -30,9 +30,10 @@ export default {
 
             // Release the connection back to the pool
             connection.release();
-        } catch (error) {
+        } catch (err) {
             // Log and handle connection errors
             console.error('Error connecting to MySQL:', error);
+            throw {code: "sql_error", detail: err}
         }
     },
 
@@ -41,7 +42,7 @@ export default {
             const [rows, fields] =  await pool.query(sql, params);
             return rows
         } catch(err) { 
-            throw(err)
+            throw {code: "sql_error", detail: err}
         }
     }
 }

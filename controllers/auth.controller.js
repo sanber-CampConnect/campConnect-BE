@@ -1,93 +1,160 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import dotenv from "dotenv";
 
-import jwtConfig from "../configs/jwt.js";
 import Users from "../models/Users.js";
+import jwtConfig from "../configs/jwt.js";
+import mailService from "../services/mail.service.js";
 
-dotenv.config();
+const sendVerificationEmail = function(req, res, next) {
+    Users.getByEmail(req.body["email"])
+        .then(result => {
+            if(result.length == 0) throw {code: "not_found", msg: "User with given email not found"}
+            if(result[0]["is_verified"]) throw {code: "no_op", msg: "This email has been verified. Verification is not needed"}
 
-function generateToken(userInfo, onError, onSuccess) {
-    jwt.sign(
-        userInfo, 
-        jwtConfig.secret,
-        { expiresIn: 60*60*jwtConfig.lifetime },
-        (err, token) => err? onError(err): onSuccess(token)
-    );
+            return composeVerificationEmail(req.body["email"])
+        })
+        .then(result => {
+            const {destination, subject, content} = result;
+            mailService.sendMail(destination, subject, content, (err, data) => {
+                if(err) throw {err: "internal_error", detail: err}
+                return res.send({msg: `Verification email sent to ${req.body["email"]}`})
+            });
+        })
+        .catch(err => next(err))
 }
 
-export default {
-    register: function(req, res, next) {
-        const FILLABLES = ["name", "email", "password"];
-        Object.keys(req.body).forEach(key => {
-            if(!FILLABLES.includes(key)) delete req.body[key]
+
+const register = function(req, res, next) {
+    const FILLABLES = ["name", "email", "password"];
+    Object.keys(req.body).forEach(key => {
+        if(!FILLABLES.includes(key)) delete req.body[key]
+    })
+
+    if(Object.keys(req.body).length != FILLABLES.length) {
+        return next({code: "incomplete_request", msg: "Not enough data to process"})
+    }
+
+    let mailWarning = undefined;
+    Users.getByEmail(req.body["email"])
+        .then(result => {
+            if(result.length > 0) throw {code: "duplicate_entry", msg: "This email has already be used"}
+            return bcrypt.hash(req.body["password"], 10)
         })
+        .then(hashedPassword => {
+            req.body["password"] = hashedPassword
+            const newUserData = [FILLABLES, FILLABLES.map(key => req.body[key])];
+            return Users.store(newUserData)
+        })
+        .then(result => {
+            const {destination, subject, content} = composeVerificationEmail(req.body["email"], next)
+            mailService.sendMail(destination, subject, content, (err, data) => {
+                if(err) mailWarning = "Verification email not sent. Please access other menu part to request it again"
+            });
 
-        if(Object.keys(req.body).length != FILLABLES.length) {
-            return next({code: "incomplete_request", msg: "Not enough data to process"})
-        }
+            return generateToken({ id: result.insertId, role: "user" })
+        })
+        .then(token => res.send({
+            msg: `Account registered. Hello ${req.body["name"]} (U#${result.insertId})!`,
+            warning: mailWarning,
+            authorization: token 
+        }))
+        .catch(err => next(err))
+}
 
-        Users.getByEmail(req.body["email"])
+const login = function(req, res, next) {
+    const FILLABLES = ["email", "password"];
+    Object.keys(req.body).forEach(key => {
+        if(!FILLABLES.includes(key)) delete req.body[key]
+    })
+
+    if(Object.keys(req.body).length != FILLABLES.length) {
+        return next({code: "incomplete_request", msg: "Not enough data to process"})
+    }
+    
+    var user = undefined;
+    const {email, password} = req.body;
+    Users.getByEmail(email)
+        .then(result => {
+            if(result.length == 0) throw {code: "not_found", msg: "User with given email not found"}
+
+            user = result[0];
+            return result;
+        })
+        .then(_ => bcrypt.compare(password, user.password))
+        .then(isMatched => {
+            if(!isMatched) throw { code: "unmatched_credentials", msg: "Password doesn't match" }
+            return generateToken({ id: user.id, role: user.role });
+        })
+        .then(token => res.send({
+            msg: `Hello ${user.name} (U#${user.id})!`,
+            authorization: token
+        }))
+        .catch(err => next(err))
+}
+    
+const resetPassword = function(req, res, next) {
+    const {email} = req.body;
+    if(email == undefined) return next({code: "incomplete_request", msg: "Email is either not provided or has no associated user"})
+    res.send({msg: "Work in progress"});
+}
+
+const verifyAccount = function(req, res, next) {
+    jwt.verify(req.query.token, jwtConfig.secret, (err, decodedData) => {
+        if (err) return next({code: "invalid_token", msg: "Token may be invalid or expired. Try to login again"})
+        if (decodedData.email == undefined) return next({code: "invalid_token", msg: "Token may not belong to this endpoint"})
+
+        Users.getByEmail(decodedData.email)
             .then(result => {
-                if(result.length > 0) next({code: "duplicate_entry", msg: "This email has already be used"})
+                if(result.length == 0) throw {code: "not_found", msg: "User with given email not found"}
+                const user = result[0]
+                return Users.updateById(user.id, {"is_verified": true});
+            })
+            .then(result => {
+                if(result.affectedRows === 0) throw {code: "not_found", msg: 'User not found or activation has already done'};
+                return res.send({ msg: 'Account successfully updated!' });
+            })
+            .catch(err => next(err));
+    });
+}
 
-                bcrypt.hash(req.body["password"], 10, (err, hashed) => {
-                    if(err) return next({code: "internal_error", detail: err})
+function generateToken(userInfo) {
+    return new Promise((resolve, reject) => {
+        jwt.sign(
+            userInfo, 
+            jwtConfig.secret,
+            { expiresIn: 60*60*jwtConfig.lifetime },
+            (err, token) => {
+                if(err) reject({
+                    code: "internal_error", 
+                    msg: "Something went wrong during generating token",
+                    detail: err, 
+                })
+                resolve(token)
+            }
+        );
+    })
+}
 
-                    req.body["password"] = hashed
-                    const newUserData = [FILLABLES, FILLABLES.map(key => req.body[key])];
-                    Users.store(newUserData)
-                        .then(result => generateToken( 
-                            { id: result.insertId, role: "user" }, 
-                            err => next({code: "internal_error", detail: err}),
-                            token => res.send({
-                                msg: `Account registered. Hello ${req.body["name"]} (U#${result.insertId})!`,
-                                authorization: token 
-                            })
-                        )) 
-                        .catch(err => next({code: "sql_error", detail: err}))
+function composeVerificationEmail(destination) {
+    return new Promise((resolve, reject) => {
+        generateToken({email: destination})
+            .then(token => {
+                const url = `localhost:8000/auth/verifyAccount?token=${token}`
+                resolve({
+                    destination: destination,
+                    subject: "Yuk aktifkan akunmu",
+                    content: `Halo! Terima kasih telah bergabung dengan CampConnect`
+                        + `\nSilakan akses tautan berikut untuk mulai menyewa perlengkapan kemahanmu!\n${url}`
                 })
             })
-            .catch(err => next({code: "sql_error", detail: err}))
-    },
-
-    login: function(req, res, next) {
-        const FILLABLES = ["email", "password"];
-        Object.keys(req.body).forEach(key => {
-            if(!FILLABLES.includes(key)) delete req.body[key]
-        })
-
-        if(Object.keys(req.body).length != FILLABLES.length) {
-            return next({code: "incomplete_request", msg: "Not enough data to process"})
-        }
-        
-        const {email, password} = req.body;
-        Users.getByEmail(email)
-            .then(result => {
-                if(result.length == 0) next({code: "not_found", msg: "User with given email not found"})
-
-                const {id, name, password: actualPassword, role} = result[0];
-                bcrypt.compare(password, actualPassword)
-                    .then(isMatched => {
-                        if(!isMatched) return next({code: "unmatched_credentials", msg: "Wrong password"})
-
-                        generateToken({ id: id, role: role }, next, token => res.send({
-                            msg: `Hello ${name} (U#${id})!`,
-                            authorization: token
-                        }));
-                    })
-                    .catch(err => next({code: "internal_error", detail: err}))
-                })
-            .catch(err => next({code: "sql_error", detail: err}))
-    },
-    
-    resetPassword: function(req, res, next) {
-        // Provide special link here
-        res.send({msg: "Work in progress"});
-    },
-
-    verifyAccount: function(req, res, next) {
-        // Send verification email here
-        res.send({msg: "Work in progress"});
-    }
+            .catch(err => err)
+    })
 }
+
+export default { 
+    register: register, 
+    login: login, 
+    resetPassword: resetPassword, 
+    sendVerificationEmail: sendVerificationEmail, 
+    verifyAccount: verifyAccount, 
+};

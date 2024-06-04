@@ -11,8 +11,17 @@ export default function authJWT(req, res, next) {
     jwt.verify(token, jwtConfig.secret, (err, decodedData) => {
         if (err) return next({code: "invalid_token", msg: "Token may be invalid or expired. Try to login again"})
 
-        req.id = decodedData.id;
-        req.role = decodedData.role;
+        const notAuthToken = (
+            decodedData.id == undefined 
+            || decodedData.role == undefined
+        )
+        if(notAuthToken) return next({code: "invalid_token", msg: "Token may not belong to this endpoint"})
+
+        req.user = {
+            id: decodedData.id,
+            role: decodedData.role
+        };
+
         next();
     });
 }
