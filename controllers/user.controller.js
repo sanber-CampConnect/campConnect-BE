@@ -90,7 +90,7 @@ export default {
     },
 
     destroy: function(req, res, next) {
-        model.destroy(req.params.id)
+        model.deleteById(req.params.id)
             .then(result => {
                 if(result.affectedRows == 0) throw {code: "not_found", msg: `No user with id ${req.params.id} found`}
                 return res.send({msg: `Deleted User with id: ${req.params.id}`})
