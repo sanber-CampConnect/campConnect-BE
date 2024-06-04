@@ -35,6 +35,7 @@ const register = function(req, res, next) {
     }
 
     let mailWarning = undefined;
+    let insertId = undefined;
     Users.getByEmail(req.body["email"])
         .then(result => {
             if(result.length > 0) throw {code: "duplicate_entry", msg: "This email has already be used"}
@@ -51,10 +52,11 @@ const register = function(req, res, next) {
                 if(err) mailWarning = "Verification email not sent. Please access other menu part to request it again"
             });
 
+            insertId = result.insertId;
             return generateToken({ id: result.insertId, role: "user" })
         })
         .then(token => res.send({
-            msg: `Account registered. Hello ${req.body["name"]} (U#${result.insertId})!`,
+            msg: `Account registered. Hello ${req.body["name"]} (U#${insertId})!`,
             warning: mailWarning,
             authorization: token 
         }))
