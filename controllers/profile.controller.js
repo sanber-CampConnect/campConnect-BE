@@ -14,7 +14,7 @@ export const getProfile = (req, res, next) => {
 };
 
 export const updateProfile = (req, res, next) => {
-    const FILLABLES = ["name", "email", "phone", "role", "image", "is_verified"];
+    const FILLABLES = ["name", "email", "phone", "image"];
     const updatedUser = {};
     Object.keys(req.body).forEach((key) => { // filter
         if(FILLABLES.includes(key)) {
