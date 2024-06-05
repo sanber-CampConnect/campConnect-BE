@@ -1,7 +1,10 @@
+/* Clear all table first*/
 DROP DATABASE IF EXISTS campConnect;
 CREATE DATABASE campConnect;
+
 USE campConnect;
 
+/* Make migration */
 CREATE TABLE Users(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(64) NOT NULL,
@@ -15,12 +18,12 @@ CREATE TABLE Users(
 
 CREATE TABLE Categories(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(32) NOT NULL
+    name VARCHAR(32) NOT NULL UNIQUE
 );
 
 CREATE TABLE Transactions(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    invoice_number VARCHAR(32) NOT NULL,
+    invoice_number VARCHAR(32) NOT NULL UNIQUE,
     evidence_image VARCHAR(64),
     method ENUM("tunai", "transfer") NOT NULL,
     is_paid BOOLEAN NOT NULL,
@@ -34,7 +37,6 @@ CREATE TABLE Products(
     name VARCHAR(64) NOT NULL,
     image VARCHAR(64) NOT NULL,
     description VARCHAR(2048) NOT NULL,
-    care_procedure VARCHAR(2048) NOT NULL,
     date_added DATETIME DEFAULT NOW(),
 
     FOREIGN KEY (category_id) 
@@ -76,20 +78,10 @@ CREATE TABLE Notifications(
 
 CREATE TABLE Carts(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    user_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL UNIQUE,
 
     FOREIGN KEY (user_id)
         REFERENCES Users(id)
-);
-
-CREATE TABLE UseProcedures(
-    id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    product_id INTEGER NOT NULL,
-    description VARCHAR(512) NOT NULL,
-    step INTEGER NOT NULL,
-
-    FOREIGN KEY (product_id)
-        REFERENCES Products(id)
 );
 
 CREATE TABLE Orders(
@@ -108,7 +100,7 @@ CREATE TABLE Orders(
 
 CREATE TABLE Reviews(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    order_id INTEGER NOT NULL,
+    order_id INTEGER NOT NULL UNIQUE,
     title VARCHAR(32) NOT NULL,
     comment VARCHAR(1024) NOT NULL,
 
@@ -143,7 +135,7 @@ CREATE TABLE OrderItems(
 
 CREATE TABLE Rents(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    orderItem_id INTEGER NOT NULL,
+    orderItem_id INTEGER NOT NULL UNIQUE,
     rent_start DATETIME NOT NULL,
     rent_due DATETIME NOT NULL,
     return_date DATETIME
