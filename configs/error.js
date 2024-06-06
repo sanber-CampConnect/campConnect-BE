@@ -24,6 +24,10 @@ export default {
         status_code: 403, 
         msg: "Access token invalid"
     },
+    "no_role_permission": {
+        status_code: 403, 
+        msg: "Access prohibited because requester has no role permission"
+    },
     "not_found": {
         status_code: 404,
         msg: "Requested resource not found"
