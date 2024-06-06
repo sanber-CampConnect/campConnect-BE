@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 
@@ -10,6 +11,7 @@ dotenv.config();
 const APP = express();
 const PORT = process.env.PORT || 3000;
 
+APP.use(cors()); // TODO: Configure this later on
 APP.use(logger);
 APP.use(express.json());
 APP.use(bodyParser.urlencoded({extended: true}));
