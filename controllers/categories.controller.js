@@ -31,7 +31,7 @@ export default {
         model.store(data)
             .then(result => res.send({ msg: `Category created with id:${result.insertId}` }))
             .catch(err => (
-                err.detail.code == "ER_DUP_ENTRY"? 
+                err.detail?.code == "ER_DUP_ENTRY"? 
                     next({code: "duplicate_entry", msg: "Category name has already be used"}) : 
                     next(err)
             ));
