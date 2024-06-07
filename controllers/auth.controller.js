@@ -49,7 +49,10 @@ const register = function(req, res, next) {
             const newUserData = [FILLABLES, FILLABLES.map(key => req.body[key])];
             return Users.store(newUserData)
         })
-        .then(_ => composeVerificationEmail(req.body["email"]))
+        .then(result => {
+            insertId = result.insertId;
+            return composeVerificationEmail(req.body["email"])
+        })
         .then(result => {
             const {destination, subject, content} = result
             mailService.sendMail(destination, subject, content, (err, data) => {
@@ -59,8 +62,7 @@ const register = function(req, res, next) {
                 }
             });
 
-            insertId = result.insertId;
-            return generateToken({ id: result.insertId, role: "user" })
+            return generateToken({ id: insertId, role: "user" })
         })
         .then(token => res.send({
             msg: `Account registered. Hello ${req.body["name"]} (U#${insertId})!`,
