@@ -50,9 +50,12 @@ const register = function(req, res, next) {
             return Users.store(newUserData)
         })
         .then(result => {
-            const {destination, subject, content} = composeVerificationEmail(req.body["email"], next)
+            const {destination, subject, content} = composeVerificationEmail(req.body["email"])
             mailService.sendMail(destination, subject, content, (err, data) => {
-                if(err) mailWarning = "Verification email not sent. Please access other menu part to request it again"
+                if(err) {
+                    mailWarning = "Verification email not sent. Please access other menu part to request it again"
+                    console.log(err)
+                }
             });
 
             insertId = result.insertId;
