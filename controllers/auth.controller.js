@@ -49,8 +49,9 @@ const register = function(req, res, next) {
             const newUserData = [FILLABLES, FILLABLES.map(key => req.body[key])];
             return Users.store(newUserData)
         })
+        .then(_ => composeVerificationEmail(req.body["email"]))
         .then(result => {
-            const {destination, subject, content} = composeVerificationEmail(req.body["email"])
+            const {destination, subject, content} = result
             mailService.sendMail(destination, subject, content, (err, data) => {
                 if(err) {
                     mailWarning = "Verification email not sent. Please access other menu part to request it again"
@@ -155,7 +156,7 @@ function composeVerificationEmail(destination) {
                         + `\nSilakan akses tautan berikut untuk mulai menyewa perlengkapan kemahanmu!\n${url}`
                 })
             })
-            .catch(err => err)
+            .catch(err => reject(err))
     })
 }
 
