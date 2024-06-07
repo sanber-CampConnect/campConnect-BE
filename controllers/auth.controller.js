@@ -1,9 +1,12 @@
+import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 import Users from "../models/Users.js";
 import jwtConfig from "../configs/jwt.js";
 import mailService from "../services/mail.service.js";
+
+dotenv.config()
 
 const sendVerificationEmail = function(req, res, next) {
     Users.getByEmail(req.body["email"])
@@ -141,7 +144,7 @@ function composeVerificationEmail(destination) {
     return new Promise((resolve, reject) => {
         generateToken({email: destination})
             .then(token => {
-                const url = `localhost:8000/auth/verifyAccount?token=${token}`
+                const url = `${process.env.SERVER_DOMAIN}/auth/verifyAccount?token=${token}`
                 resolve({
                     destination: destination,
                     subject: "Yuk aktifkan akunmu",
