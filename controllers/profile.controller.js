@@ -14,7 +14,7 @@ export const getProfile = (req, res, next) => {
 };
 
 export const updateProfile = (req, res, next) => {
-    const FILLABLES = ["name", "email", "phone", "image"];
+    const FILLABLES = ["fullname", "username", "email", "phone", "image"];
     const updatedUser = {};
     Object.keys(req.body).forEach((key) => { // filter
         if(FILLABLES.includes(key)) {
@@ -30,7 +30,7 @@ export const updateProfile = (req, res, next) => {
     model.updateById(userId, updatedUser)
         .then(result => {
             if(result.affectedRows === 0) return next({code: "not_found", msg: 'User not found'});
-            return res.send({ msg: 'Profile updated successfully' });
+            return res.status(201).send({ msg: 'Profile updated successfully' });
         })
         .catch(err => next(err));
 };
@@ -56,8 +56,18 @@ export const updatePassword = (req, res, next) => {
             const hashedPassword = bcrypt.hashSync(newPassword, 10);
             const sql = 'UPDATE Users SET password = ? WHERE id = ?';
             connection.query(sql, [hashedPassword, userId])
-                .then(result => res.send({ message: 'Password updated successfully' }) )
+                .then(result => res.status(201).send({ message: 'Password updated successfully' }) )
                 .catch(err => next(err))
         })
         .catch(err => next(err))
+};
+
+export const deleteAccount = (req, res, next) => {
+    const userId = Number(req.user.id);
+    model.deleteById(userId)
+        .then(result => {
+            if(result.affectedRows === 0) return next({code: "not_found", msg: 'User not found'});
+            return res.send({ msg: 'Profile deleted successfully' });
+        })
+        .catch(err => next(err));
 };
