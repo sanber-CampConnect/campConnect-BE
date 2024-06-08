@@ -40,4 +40,14 @@ export default {
         const params = [id];
         return await connection.query(sql, params);
     },
+
+    products: async function(product_id) {
+        const sql = (
+            `SELECT * `
+                + `FROM ${TABLE_NAME} `
+                + `WHERE product_id = ?`
+        );
+        const params = [product_id];
+        return await connection.query(sql, params);
+    }
 }
