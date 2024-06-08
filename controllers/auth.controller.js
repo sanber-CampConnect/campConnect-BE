@@ -28,7 +28,7 @@ const sendVerificationEmail = function(req, res, next) {
 
 
 const register = function(req, res, next) {
-    const FILLABLES = ["name", "email", "password"];
+    const FILLABLES = ["fullname", "username",  "email", "password"];
     Object.keys(req.body).forEach(key => {
         if(!FILLABLES.includes(key)) delete req.body[key]
     })
@@ -38,7 +38,7 @@ const register = function(req, res, next) {
     }
 
     let mailWarning = undefined;
-    let insertId = undefined;
+    let newUser = undefined
     Users.getByEmail(req.body["email"])
         .then(result => {
             if(result.length > 0) throw {code: "duplicate_entry", msg: "This email has already be used"}
@@ -50,7 +50,12 @@ const register = function(req, res, next) {
             return Users.store(newUserData)
         })
         .then(result => {
-            insertId = result.insertId;
+            newUser = {
+                id: result.insertId,
+                fullname: req.body.fullname,
+                username: req.body.username,
+                email: req.body.email,
+            }
             return composeVerificationEmail(req.body["email"])
         })
         .then(result => {
@@ -62,12 +67,13 @@ const register = function(req, res, next) {
                 }
             });
 
-            return generateToken({ id: insertId, role: "user" })
+            return generateToken({ id: newUser.id, role: "user" })
         })
         .then(token => res.send({
-            msg: `Account registered. Hello ${req.body["name"]} (U#${insertId})!`,
+            msg: `Account registered. Hello ${req.body["name"]} (U#${newUser.id})!`,
             warning: mailWarning,
-            authorization: token 
+            authorization: token,
+            data: newUser
         }))
         .catch(err => next(err))
 }
@@ -82,7 +88,7 @@ const login = function(req, res, next) {
         return next({code: "incomplete_request", msg: "Not enough data to process"})
     }
     
-    var user = undefined;
+    let user = undefined;
     const {email, password} = req.body;
     Users.getByEmail(email)
         .then(result => {
@@ -96,10 +102,14 @@ const login = function(req, res, next) {
             if(!isMatched) throw { code: "unmatched_credentials", msg: "Password doesn't match" }
             return generateToken({ id: user.id, role: user.role });
         })
-        .then(token => res.send({
-            msg: `Hello ${user.name} (U#${user.id})!`,
-            authorization: token
-        }))
+        .then(token => {
+            user.password = undefined;
+            res.send({
+                msg: `Hello ${user.name} (U#${user.id})!`,
+                authorization: token,
+                data: user
+            })
+        })
         .catch(err => next(err))
 }
     
