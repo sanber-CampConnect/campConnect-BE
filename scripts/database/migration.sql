@@ -48,7 +48,7 @@ CREATE TABLE Products(
 CREATE TABLE Variants(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     product_id INTEGER NOT NULL,
-    name VARCHAR(32) NOT NULL,
+    name VARCHAR(32) NOT NULL UNIQUE,
     stock INTEGER UNSIGNED NOT NULL,
 
     FOREIGN KEY (product_id)
@@ -120,6 +120,7 @@ CREATE TABLE CartItems(
         REFERENCES Carts(id),
     FOREIGN KEY (product_id)
         REFERENCES Products(id)
+        ON DELETE SET NULL
 );
 
 CREATE TABLE OrderItems(
