@@ -11,9 +11,9 @@ CREATE TABLE Users(
     username VARCHAR(32) NOT NULL,
     email VARCHAR(64) UNIQUE NOT NULL,
     password VARCHAR(64) NOT NULL,
-    phone VARCHAR(16),
+    phone VARCHAR(16) DEFAULT NULL,
     role ENUM("customer", "admin") NOT NULL DEFAULT "customer",
-    image VARCHAR(64),
+    image VARCHAR(64) DEFAULT NULL,
     is_verified BOOLEAN NOT NULL DEFAULT False
 );
 
@@ -25,7 +25,7 @@ CREATE TABLE Categories(
 CREATE TABLE Transactions(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     invoice_number VARCHAR(32) NOT NULL UNIQUE,
-    evidence_image VARCHAR(64),
+    evidence_image VARCHAR(64) DEFAULT NULL,
     method ENUM("tunai", "transfer") NOT NULL,
     is_paid BOOLEAN NOT NULL,
     total_items INTEGER UNSIGNED NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE Products(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     category_id INTEGER NOT NULL,
     name VARCHAR(64) NOT NULL,
-    image VARCHAR(64),
+    image VARCHAR(64) DEFAULT NULL,
     description VARCHAR(2048) NOT NULL,
     price INTEGER UNSIGNED NOT NULL,
     date_added DATETIME DEFAULT NOW(),
@@ -59,7 +59,7 @@ CREATE TABLE Announcements(
     id INTEGER PRIMARY KEY AUTO_INCREMENT, 
     user_id INTEGER NOT NULL,
     title VARCHAR(32) NOT NULL,
-    image VARCHAR(64),
+    image VARCHAR(64) DEFAULT NULL,
     content VARCHAR(4096) NOT NULL,
 
     FOREIGN KEY (user_id)
