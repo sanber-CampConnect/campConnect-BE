@@ -1,6 +1,6 @@
 import model from "../models/Variants.js";
 
-const FILLABLES = ["product_id","name","price", "stock"];
+const FILLABLES = ["product_id","name","stock"];
 
 export default {
     index: function(req, res, next) {

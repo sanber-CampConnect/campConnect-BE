@@ -9,7 +9,7 @@ export default {
     },
     
     store: async function(data) {
-        const sql = `INSERT INTO ${TABLE_NAME}(??) VALUES (?)`;
+        const sql = `INSERT INTO ${TABLE_NAME}(??) VALUES ?`;
         return await connection.query(sql, data);
     },
 

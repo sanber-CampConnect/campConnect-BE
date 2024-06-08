@@ -389,7 +389,6 @@ CREATE TABLE `Variants` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `product_id` int(11) NOT NULL,
   `name` varchar(32) NOT NULL,
-  `price` int(10) unsigned NOT NULL,
   `stock` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `product_id` (`product_id`),
