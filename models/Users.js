@@ -24,6 +24,7 @@ export default {
     },
 
     updateById: async (id, data) => {
+        console.log(data)
         const sql = (
             `UPDATE ${TABLE_NAME} SET ? `
             + `WHERE id = ? `

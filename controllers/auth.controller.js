@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 
 import Users from "../models/Users.js";
 import jwtConfig from "../configs/jwt.js";
+import connection from '../models/DBConnection.js';
 import mailService from "../services/mail.service.js";
 
 dotenv.config()
@@ -112,10 +113,19 @@ const login = function(req, res, next) {
         })
         .catch(err => next(err))
 }
-    
-const resetPassword = function(req, res, next) {
+
+const forgotPassword = async function(req, res, next) {
     const {email} = req.body;
     if(email == undefined) return next({code: "incomplete_request", msg: "Email is either not provided or has no associated user"})
+    let mailWarning = undefined;
+    const {destination, subject, content} = await composeResetPasswordEmail(email, next)
+    console.log(await generateToken({email}))
+    mailService.sendMail(destination, subject, content, (err, data) => {
+        if(err) {
+            console.log(err)
+            mailWarning = "Verification email not sent. Please access other menu part to request it again"
+        }
+    });
     res.send({msg: "Work in progress"});
 }
 
@@ -133,6 +143,34 @@ const verifyAccount = function(req, res, next) {
             .then(result => {
                 if(result.affectedRows === 0) throw {code: "not_found", msg: 'User not found or activation has already done'};
                 return res.send({ msg: 'Account successfully updated!' });
+            })
+            .catch(err => next(err));
+    });
+}
+
+const resetPassword = function(req, res, next) {
+    const { newPassword, confirmPassword } = req.body;
+                
+    const invalidRequest = (
+        newPassword == undefined 
+        || confirmPassword == undefined
+        || newPassword !== confirmPassword
+    );
+
+    if(invalidRequest) return next({code: "bad_request", msg: "Need both current new password and current password data / new password does not match with confirm password"})
+
+    jwt.verify(req.query.token, jwtConfig.secret, (err, decodedData) => {
+        if (err) return next({code: "invalid_token", msg: "Token may be invalid or expired. Try make forgot password request again"})
+        if (decodedData.email == undefined) return next({code: "invalid_token", msg: "Token may not belong to this endpoint"})
+        Users.getByEmail(decodedData.email)
+            .then(result => {
+                const user = result[0];
+                
+                const hashedPassword = bcrypt.hashSync(newPassword, 10);
+                const sql = 'UPDATE Users SET password = ? WHERE id = ?';
+                connection.query(sql, [hashedPassword, user.id])
+                .then(result => res.send({ message: 'Password updated successfully' }) )
+                .catch(err => next(err))
             })
             .catch(err => next(err));
     });
@@ -172,10 +210,28 @@ function composeVerificationEmail(destination) {
     })
 }
 
+function composeResetPasswordEmail(email) {
+    return new Promise((resolve, reject) => {
+        generateToken({email})
+            .then(token => {
+                const url = `${process.env.SERVER_DOMAIN}/auth/resetPassword?token=${token}`;
+                resolve({
+                    destination: email,
+                    subject: "Permintaan Reset Password",
+                    content: `Halo! Kami menerima permintaan untuk mereset password akun Anda.`
+                        + `\nSilakan klik tautan di bawah ini untuk melanjutkan proses reset password Anda:\n${url}`
+                        + `\nJika Anda tidak meminta reset password ini, abaikan email ini dan pastikan akun Anda aman.`
+                });
+            })
+            .catch(err => reject(err));
+    });
+}
+
 export default { 
     register: register, 
-    login: login, 
-    resetPassword: resetPassword, 
+    login: login,
+    forgotPassword: forgotPassword, 
+    resetPassword: resetPassword,  
     sendVerificationEmail: sendVerificationEmail, 
     verifyAccount: verifyAccount, 
 };
