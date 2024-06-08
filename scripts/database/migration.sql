@@ -7,10 +7,11 @@ USE campConnect;
 /* Make migration */
 CREATE TABLE Users(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(64) NOT NULL,
+    fullname VARCHAR(64) NOT NULL,
+    username VARCHAR(32) NOT NULL,
     email VARCHAR(64) UNIQUE NOT NULL,
     password VARCHAR(64) NOT NULL,
-    phone VARCHAR(16) NOT NULL DEFAULT "",
+    phone VARCHAR(16),
     role ENUM("customer", "admin") NOT NULL DEFAULT "customer",
     image VARCHAR(64),
     is_verified BOOLEAN NOT NULL DEFAULT False
@@ -35,8 +36,9 @@ CREATE TABLE Products(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     category_id INTEGER NOT NULL,
     name VARCHAR(64) NOT NULL,
-    image VARCHAR(64) NOT NULL,
+    image VARCHAR(64),
     description VARCHAR(2048) NOT NULL,
+    price INTEGER UNSIGNED NOT NULL,
     date_added DATETIME DEFAULT NOW(),
 
     FOREIGN KEY (category_id) 
@@ -47,7 +49,6 @@ CREATE TABLE Variants(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     product_id INTEGER NOT NULL,
     name VARCHAR(32) NOT NULL,
-    price INTEGER UNSIGNED NOT NULL,
     stock INTEGER UNSIGNED NOT NULL,
 
     FOREIGN KEY (product_id)
