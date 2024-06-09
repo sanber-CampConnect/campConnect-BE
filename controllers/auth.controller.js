@@ -71,7 +71,7 @@ const register = function(req, res, next) {
             return generateToken({ id: newUser.id, role: "user" })
         })
         .then(token => res.send({
-            msg: `Account registered. Hello ${req.body["name"]} (U#${newUser.id})!`,
+            msg: `Account registered. Hello ${newUser.fullname} (@${newUser.username})!`,
             warning: mailWarning,
             authorization: token,
             data: newUser
@@ -106,7 +106,7 @@ const login = function(req, res, next) {
         .then(token => {
             user.password = undefined;
             res.send({
-                msg: `Hello ${user.name} (U#${user.id})!`,
+                msg: `Hello ${user.fullname} (@${user.username})!`,
                 authorization: token,
                 data: user
             })
