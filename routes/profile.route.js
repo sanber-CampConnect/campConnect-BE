@@ -7,6 +7,7 @@ import multer from "multer";
 import express from 'express';
 import { getProfile, updateProfile, updatePassword, deleteAccount } from '../controllers/profile.controller.js';
 import { authenticated_only_middlewares } from "../configs/accessMiddlewares.js";
+import { imageOnly } from "../utils/multer.js";
 
 
 dotenv.config();
@@ -25,7 +26,11 @@ const storage = multer.diskStorage({
     }
 })
 
-const upload = multer({storage: storage})
+const upload = multer({
+    storage: storage,
+    fileFilter: imageOnly
+})
+
 const router = express.Router();
 router.get('/', authenticated_only_middlewares, getProfile);
 router.put('/edit', [...authenticated_only_middlewares, upload.single("image")], updateProfile);

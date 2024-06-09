@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import multer from "multer";
 import controller from "../controllers/product.controller.js"
 import { admin_only_middlewares, authenticated_only_middlewares } from "../configs/accessMiddlewares.js";
+import { imageOnly } from "../utils/multer.js";
 
 dotenv.config();
 const storage = multer.diskStorage({
@@ -25,7 +26,10 @@ const storage = multer.diskStorage({
     }
 })
 
-const upload = multer({storage: storage})
+const upload = multer({
+    storage: storage,
+    fileFilter: imageOnly
+})
 
 const ROUTER = express.Router();
 ROUTER.get("/", authenticated_only_middlewares, controller.index);

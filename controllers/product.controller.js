@@ -97,13 +97,18 @@ export default {
             return next({code: "incomplete_request", msg: "Not enough data to process"})
         }
         
+        req.body.image = req.imagePath || undefined;
         let tempVariants = undefined
         products.getById(req.params.id)
             .then(result => {
                 if(result.length == 0) throw {code: "not_found", msg: `No Product with id ${req.params.id} found`}
-                req.body.image = req.imagePath || result[0].image;
-                return variants.products(req.params.id);
+                if(result[0].image != null && req.imagePath != undefined) {
+                    return unlink(path.join(process.env.STORAGE_PATH, result[0].image))
+                } 
+                req.body.image = result[0].image
+                return undefined;
             })
+            .then(_ => variants.products(req.params.id))
             .then(result => {
                 /* What remains in `oldVariants` need to be deleted
                     What remains in `newVariants` need to be added */

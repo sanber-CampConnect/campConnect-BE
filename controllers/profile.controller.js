@@ -28,17 +28,23 @@ export const updateProfile = (req, res, next) => {
         }
     })
 
-    updatedUser.image = req.imagePath || undefined;
     if(Object.keys(updatedUser).length == 0) {
         return next({code: "bad_request", msg: "No processable data being supplied to server"})
     }
 
+    updatedUser.image = req.imagePath || undefined;
     const userId = Number(req.user.id);
-    model.updateById(userId, updatedUser)
+    model.getById(userId)
         .then(result => {
-            if(result.affectedRows === 0) return next({code: "not_found", msg: 'User not found'});
-            return res.status(201).send({ msg: 'Profile updated successfully' });
+            if(result.length === 0) return next({code: "not_found", msg: 'User not found'});
+            if(result[0].image != null && req.imagePath != undefined) {
+                return unlink(path.join(process.env.STORAGE_PATH, result[0].image))
+            } 
+            updatedUser.image = result[0].image
+            return undefined;
         })
+        .then(_ => model.updateById(userId, updatedUser))
+        .then(result => res.status(201).send({ msg: 'Profile updated successfully' }))
         .catch(err => next(err));
 };
 
