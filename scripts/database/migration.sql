@@ -112,8 +112,10 @@ CREATE TABLE Reviews(
 CREATE TABLE CartItems(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     cart_id INTEGER NOT NULL, 
-    product_id INTEGER NOT NULL,
+    product_id INTEGER,
+    variant_id INTEGER,
     marked_ordered BOOLEAN NOT NULL,
+    subtotal INTEGER NOT NULL,
     rent_duration INTEGER UNSIGNED NOT NULL,
 
     FOREIGN KEY (cart_id)
