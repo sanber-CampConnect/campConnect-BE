@@ -1,3 +1,4 @@
+import path from "node:path";
 import express from "express";
 import dotenv from "dotenv";
 
@@ -17,6 +18,10 @@ ROUTER.use("/categories", categoriesRouter);
 ROUTER.use("/variants", variantsRouter);
 ROUTER.use("/products", productsRouter);
 ROUTER.use("/assets", express.static(process.env.STORAGE_PATH))
-ROUTER.use("/", (req, res) => res.send({msg: "hello from CampConnect"}));
+ROUTER.use("/assets/default", express.static(path.join("public", "img")));
+ROUTER.use("/", (req, res, next) => next( {
+    code: "not_found", 
+    msg: "Hello from campConnect! We can't find the path you requested"
+}));
 
 export default ROUTER;
