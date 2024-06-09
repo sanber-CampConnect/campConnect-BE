@@ -22,6 +22,7 @@ export const updateProfile = (req, res, next) => {
         }
     })
 
+    updatedUser.image = req.imagePath || undefined;
     if(Object.keys(updatedUser).length == 0) {
         return next({code: "bad_request", msg: "No processable data being supplied to server"})
     }

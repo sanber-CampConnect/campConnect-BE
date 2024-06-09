@@ -1,11 +1,9 @@
-import crypto from "crypto";
 import products from "../models/Products.js";
 import variants from "../models/Variants.js";
 import connection from "../models/DBConnection.js";
 import { filterBody, hasEnoughData } from "../utils/requestPreprocessor.js";
 
 const FILLABLES = ["category_id", "name", "image", "description", "price"];
-const ASSET_GROUP = "products";
 
 export default {
     index: function(req, res, next) {
@@ -36,6 +34,7 @@ export default {
     
     store: function(req, res, next) {
         const productVariants = req.body.variants;
+        req.body.image = req.imagePath
 
         Object.keys(req.body).forEach(key => {
             if(!FILLABLES.includes(key)) delete req.body[key]
@@ -45,8 +44,6 @@ export default {
             return next({code: "incomplete_request", msg: "Not enough data to process"})
         }
 
-        const image = req.body.image;
-        req.body.image = crypto.randomBytes(32).toString("hex");
 
         let insertId;
         const data = [ FILLABLES, FILLABLES.map(key => req.body[key])]
@@ -99,6 +96,7 @@ export default {
         products.getById(req.params.id)
             .then(result => {
                 if(result.length == 0) throw {code: "not_found", msg: `No Product with id ${req.params.id} found`}
+                req.body.image = req.imagePath || result[0].image;
                 return variants.products(req.params.id);
             })
             .then(result => {
