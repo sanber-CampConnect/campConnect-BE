@@ -1,6 +1,12 @@
-import model from  '../models/Users.js';
+import { unlink } from "node:fs/promises";
+import path from "node:path";
+import dotenv from "dotenv";
 import bcrypt from 'bcryptjs';
+
 import connection from '../models/DBConnection.js';
+import model from  '../models/Users.js';
+
+dotenv.config();
 
 export const getProfile = (req, res, next) => {
     const userId = req.user.id;
@@ -65,10 +71,13 @@ export const updatePassword = (req, res, next) => {
 
 export const deleteAccount = (req, res, next) => {
     const userId = Number(req.user.id);
-    model.deleteById(userId)
+    model.getById(userId)
         .then(result => {
-            if(result.affectedRows === 0) return next({code: "not_found", msg: 'User not found'});
-            return res.send({ msg: 'Profile deleted successfully' });
+            if(result.length === 0) throw {code: "not_found", msg: 'User not found'};
+            if(result[0].image != null) return unlink(path.join(process.env.STORAGE_PATH, result[0].image))
+            return undefined;
         })
+        .then(_ => model.deleteById(userId))
+        .then(_ =>  res.send({ msg: 'Profile deleted successfully' }))
         .catch(err => next(err));
 };

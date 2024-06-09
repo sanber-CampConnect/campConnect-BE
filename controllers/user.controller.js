@@ -1,7 +1,12 @@
+import { unlink } from "node:fs/promises";
+import path from "node:path";
+import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
+
 import model from "../models/Users.js";
 import { filterBody, hasEnoughData } from "../utils/requestPreprocessor.js";
 
+dotenv.config()
 const FILLABLES = ["fullname", "username", "email", "phone", "role", "image", "is_verified", "password"];
 
 export default {
@@ -94,11 +99,14 @@ export default {
     },
 
     destroy: function(req, res, next) {
-        model.deleteById(req.params.id)
+        model.getById(req.params.id)
             .then(result => {
-                if(result.affectedRows == 0) throw {code: "not_found", msg: `No user with id ${req.params.id} found`}
-                return res.send({msg: `Deleted User with id: ${req.params.id}`})
+                if(result.length === 0) throw {code: "not_found", msg: 'User not found'};
+                if(result[0].image != null) return unlink(path.join(process.env.STORAGE_PATH, result[0].image))
+                return undefined;
             })
-            .catch(err => next(err))
+            .then(_ => model.deleteById(req.params.id))
+            .then(_ =>  res.send({ msg: `Deleted User with id: ${req.params.id}` }))
+            .catch(err => next(err));
     },
 }

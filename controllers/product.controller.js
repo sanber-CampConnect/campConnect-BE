@@ -1,8 +1,13 @@
+import { unlink } from "node:fs/promises";
+import path from "node:path";
+import dotenv from "dotenv";
+
 import products from "../models/Products.js";
 import variants from "../models/Variants.js";
 import connection from "../models/DBConnection.js";
 import { filterBody, hasEnoughData } from "../utils/requestPreprocessor.js";
 
+dotenv.config();
 const FILLABLES = ["category_id", "name", "image", "description", "price"];
 
 export default {
@@ -159,11 +164,14 @@ export default {
     },
 
     destroy: function(req, res, next) {
-        products.deleteById(req.params.id)
+        products.getById(req.params.id)
             .then(result => {
-                if(result.affectedRows == 0) throw {code: "not_found", msg: `No Product with id ${req.params.id} found`}
-                return res.send({msg: `Deleted Product with id: ${req.params.id}`})
+                if(result.length === 0) throw {code: "not_found", msg: `No Product with id ${req.params.id} found`};
+                if(result[0].image != null) return unlink(path.join(process.env.STORAGE_PATH, result[0].image))
+                return undefined;
             })
-            .catch(err => next(err))
+            .then(_ => products.deleteById(req.params.id))
+            .then(_ =>  res.send({ msg: `Deleted Product with id: ${req.params.id}` }))
+            .catch(err => next(err));
     },
 }
