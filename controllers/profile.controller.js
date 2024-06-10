@@ -36,11 +36,11 @@ export const updateProfile = (req, res, next) => {
     model.getById(userId)
         .then(result => {
             if(result.length === 0) return next({code: "not_found", msg: 'User not found'});
+            updatedUser.image = req.imagePath || result[0].image;
+
             if(result[0].image != null && req.imagePath != undefined) {
                 return unlink(path.join(process.env.STORAGE_PATH, result[0].image))
             } 
-
-            updatedUser.image = req.imagePath == undefined? result[0].image: req.imagePath;
             return undefined;
         })
         .then(_ => model.updateById(userId, updatedUser))
