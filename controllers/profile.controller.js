@@ -32,7 +32,6 @@ export const updateProfile = (req, res, next) => {
         return next({code: "bad_request", msg: "No processable data being supplied to server"})
     }
 
-    updatedUser.image = req.imagePath || undefined;
     const userId = Number(req.user.id);
     model.getById(userId)
         .then(result => {
@@ -40,7 +39,8 @@ export const updateProfile = (req, res, next) => {
             if(result[0].image != null && req.imagePath != undefined) {
                 return unlink(path.join(process.env.STORAGE_PATH, result[0].image))
             } 
-            updatedUser.image = result[0].image
+
+            updatedUser.image = req.imagePath == undefined? result[0].image: req.imagePath;
             return undefined;
         })
         .then(_ => model.updateById(userId, updatedUser))

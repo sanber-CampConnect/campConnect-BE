@@ -14,7 +14,6 @@ dotenv.config();
 const storage = multer.diskStorage({
     destination: function(req, file, callback) {
         const basePath = path.join(process.env.STORAGE_PATH, "users")
-        console.log(basePath)
         fs.access(basePath, fs.constants.R_OK | fs.constants.W_OK, (err) => {
             if(err) fs.mkdir(basePath, () => callback(null, basePath))
             else callback(null, basePath)
@@ -22,7 +21,6 @@ const storage = multer.diskStorage({
     },
     filename: function(req, file, callback) {
         const fileName = `${crypto.randomBytes(20).toString("hex")}.webp`
-        console.log(fileName)
         req.imagePath = path.join("users", fileName);
         callback(null, fileName)
     }

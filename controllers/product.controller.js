@@ -97,7 +97,6 @@ export default {
             return next({code: "incomplete_request", msg: "Not enough data to process"})
         }
         
-        req.body.image = req.imagePath || undefined;
         let tempVariants = undefined
         products.getById(req.params.id)
             .then(result => {
@@ -105,7 +104,7 @@ export default {
                 if(result[0].image != null && req.imagePath != undefined) {
                     return unlink(path.join(process.env.STORAGE_PATH, result[0].image))
                 } 
-                req.body.image = result[0].image
+                req.body.image = req.imagePath == undefined? result[0].image: req.imagePath;
                 return undefined;
             })
             .then(_ => variants.products(req.params.id))
