@@ -48,7 +48,7 @@ CREATE TABLE Products(
 CREATE TABLE Variants(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     product_id INTEGER NOT NULL,
-    name VARCHAR(32) NOT NULL UNIQUE,
+    name VARCHAR(32) NOT NULL,
     stock INTEGER UNSIGNED NOT NULL,
 
     FOREIGN KEY (product_id)
@@ -122,19 +122,28 @@ CREATE TABLE CartItems(
         REFERENCES Carts(id),
     FOREIGN KEY (product_id)
         REFERENCES Products(id)
+        ON DELETE SET NULL,
+    FOREIGN KEY (variant_id)
+        REFERENCES Variants(id)
         ON DELETE SET NULL
 );
 
 CREATE TABLE OrderItems(
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    product_id INTEGER NOT NULL,
+    variant_id INTEGER,
+    product_id INTEGER,
     order_id INTEGER NOT NULL,
+    subtotal INTEGER NOT NULL,
     rent_duration INTEGER UNSIGNED NOT NULL,
 
     FOREIGN KEY (product_id)
         REFERENCES Products(id),
     FOREIGN KEY (order_id)
         REFERENCES Orders(id)
+        ON DELETE SET NULL,
+    FOREIGN KEY (variant_id)
+        REFERENCES Variants(id)
+        ON DELETE SET NULL
 );
 
 CREATE TABLE Rents(
