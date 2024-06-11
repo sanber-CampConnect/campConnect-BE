@@ -17,16 +17,20 @@ export default {
         msg: "Credentials given doesn't match"
     },
     "no_token": {
-        status_code: 403, 
+        status_code: 401, 
         msg: "Access token needed"
     },
     "invalid_token": {
-        status_code: 403, 
+        status_code: 401, 
         msg: "Access token invalid"
     },
     "no_role_permission": {
         status_code: 403, 
         msg: "Access prohibited because requester has no role permission"
+    },
+    "not_owner": {
+        status_code: 403, 
+        msg: "Access prohibited "
     },
     "not_found": {
         status_code: 404,
