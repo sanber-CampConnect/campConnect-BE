@@ -17,21 +17,6 @@ CREATE TABLE Users(
     `is_verified` BOOLEAN NOT NULL DEFAULT False
 );
 
-CREATE TABLE Categories(
-    `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-    `name` VARCHAR(32) NOT NULL UNIQUE
-);
-
-CREATE TABLE Transactions(
-    `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-    `invoice_number` VARCHAR(32) NOT NULL UNIQUE,
-    `evidence_image` VARCHAR(64) DEFAULT NULL,
-    `method` ENUM("tunai", "transfer") NOT NULL,
-    `is_paid` BOOLEAN NOT NULL,
-    `total_items` INTEGER UNSIGNED NOT NULL,
-    `total_price` INTEGER UNSIGNED NOT NULL
-);
-
 CREATE TABLE Products(
     `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
     `category_id` INTEGER NOT NULL,
@@ -88,16 +73,27 @@ CREATE TABLE Carts(
 CREATE TABLE Orders(
     `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
     `user_id` INTEGER NOT NULL,
-    `transaction_id` INTEGER NOT NULL,
     `payment_due` DATETIME NOT NULL,
     `status` ENUM("belum_bayar", "sedang_disewa", "selesai", "dibatalkan") NOT NULL DEFAULT "belum_bayar",
     `last_update` DATETIME NOT NULL DEFAULT NOW(),
 
     FOREIGN KEY (user_id)
         REFERENCES Users(id),
-    FOREIGN KEY (transaction_id)
-        REFERENCES Transactions(id)
 );
+
+CREATE TABLE Transactions(
+    `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+    `order_id` INTEGER,
+    `invoice_number` VARCHAR(32) NOT NULL UNIQUE,
+    `evidence_image` VARCHAR(64) DEFAULT NULL,
+    `method` ENUM("tunai", "transfer") NOT NULL,
+    `total_items` INTEGER UNSIGNED NOT NULL,
+    `total_price` INTEGER UNSIGNED NOT NULL,
+
+    FOREIGN KEY (order_id)
+        REFERENCES Orders(id)
+);
+
 
 CREATE TABLE Reviews(
     `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
