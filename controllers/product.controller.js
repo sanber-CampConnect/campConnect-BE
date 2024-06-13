@@ -57,7 +57,7 @@ export default {
                 insertId = result.insertId;
                 const variantData = [
                     ["product_id", "name", "stock"],
-                    productVariants.map((variant) => [insertId, ...Object.values(variant)])
+                    productVariants.map(variant => [insertId, variant.name, variant.stock])
                 ]
                 return variants.store(variantData) //uploadImage(image, req.body.image, ASSET_GROUP);
             })
@@ -110,33 +110,35 @@ export default {
             })
             .then(_ => variants.products(req.params.id))
             .then(result => {
-                /* What remains in `oldVariants` need to be deleted
-                    What remains in `newVariants` need to be added */
-                tempVariants = result
-                const oldVariantFlags = [...Array(tempVariants.length)].map(_ => 0);
-                const newVariants = productVariants.filter((variant) => {
-                    for(let idx = 0; idx < oldVariantFlags.length; idx++) {
-                        const alreadyExist = variant.name == tempVariants[idx].name
-                        if(alreadyExist) {
-                            oldVariantFlags[idx] = 1
-                            return false;
+                /* What remained in `tempVariants` need to be deleted
+                    What remained in `newVariants` need to be added */
+                if(result.length != 0) {
+                    tempVariants = result
+                    const oldVariantFlags = [...Array(tempVariants.length)].map(_ => 0);
+                    const newVariants = productVariants.filter((variant) => {
+                        for(let idx = 0; idx < oldVariantFlags.length; idx++) {
+                            const alreadyExist = variant.name == tempVariants[idx].name
+                            if(alreadyExist) {
+                                oldVariantFlags[idx] = 1
+                                return false;
+                            }
                         }
-                    }
-                    return true;
-                })
+                        return true;
+                    })
 
-                tempVariants = tempVariants.filter((val, idx) => oldVariantFlags[idx] == 0)
-                if(newVariants.length != 0) {
-                    const variantData = [
-                        ["product_id", "name", "stock"],
-                        newVariants.map((variant) => [req.params.id, ...Object.values(variant)])
-                    ]
-                    return variants.store(variantData) //uploadImage(image, req.body.image, ASSET_GROUP);
+                    tempVariants = tempVariants.filter((val, idx) => oldVariantFlags[idx] == 0)
+                    if(newVariants.length != 0) {
+                        const variantData = [
+                            ["product_id", "name", "stock"],
+                            newVariants.map((variant) => [req.params.id, ...Object.values(variant)])
+                        ]
+                        return variants.store(variantData) //uploadImage(image, req.body.image, ASSET_GROUP);
+                    }
                 }
                 return undefined;
             })
             .then(_ => {
-                if(tempVariants.length != 0) {
+                if(tempVariants?.length != 0) {
                     return connection.query(
                         [ 
                             "DELETE FROM Variants WHERE",
