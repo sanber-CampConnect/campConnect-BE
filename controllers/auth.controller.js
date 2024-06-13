@@ -214,7 +214,7 @@ function composeResetPasswordEmail(email) {
     return new Promise((resolve, reject) => {
         generateToken({email})
             .then(token => {
-                const url = `${process.env.FRONTEND_URL}/auth/resetPassword?token=${token}`;
+                const url = `https://customer-dev.kadeoutdoor.my.id/auth/resetPassword?token=${token}`;
                 resolve({
                     destination: email,
                     subject: "Permintaan Reset Password",
@@ -226,7 +226,6 @@ function composeResetPasswordEmail(email) {
             .catch(err => reject(err));
     });
 }
-
 
 export default { 
     register: register, 
