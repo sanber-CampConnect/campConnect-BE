@@ -30,7 +30,11 @@ export default {
     },
     "not_owner": {
         status_code: 403, 
-        msg: "Access prohibited "
+        msg: "Access prohibited to non-owner"
+    },
+    "not_verified": {
+        status_code: 403, 
+        msg: "Account verification is needed"
     },
     "not_found": {
         status_code: 404,
