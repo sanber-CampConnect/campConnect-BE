@@ -2,8 +2,8 @@ import { unlink } from "node:fs/promises";
 import path from "node:path";
 import dotenv from "dotenv";
 
-import products from "../models/Products.js";
-import variants from "../models/Variants.js";
+import Products from "../models/Products.js";
+import Variants from "../models/Variants.js";
 import connection from "../models/DBConnection.js";
 import { filterBody, hasEnoughData } from "../utils/requestPreprocessor.js";
 
@@ -17,22 +17,32 @@ export default {
         const pageSize = 15;
 
         if(filter == undefined) {
-            products.getAll(pageSize, offset)
+            Products.getAll(pageSize, offset)
                 .then(result => res.send({ data: result }))
                 .catch(err => next(err))
         } else {
             const filters = {"Categories.name": filter};
-            products.getAllFiltered(filters, pageSize, offset)
+            Products.getAllFiltered(filters, pageSize, offset)
                 .then(result => res.send({ data: result }))
                 .catch(err => next(err))
         }
     },
 
     findOne: function(req, res, next) {
-        products.getById(req.params.id)
+        let product = undefined;
+        Products.getById(req.params.id)
             .then(result => {
                 if(result.length == 0) throw {code: "not_found", msg: "No Product with specified id has found"}
-                return res.send({ data: result })
+                product = result[0];
+                return Variants.products(req.params.id);
+            })
+            .then(variants => {
+                return res.send({ 
+                    data: {
+                        ...product,
+                        variants: variants
+                    }
+                })
             })
             .catch(err => next(err))
     },
@@ -52,7 +62,7 @@ export default {
 
         let insertId;
         const data = [ FILLABLES, FILLABLES.map(key => req.body[key])]
-        products.store(data)
+        Products.store(data)
             .then(result => {
                 insertId = result.insertId;
                 const variantData = [
@@ -98,7 +108,7 @@ export default {
         }
         
         let tempVariants = undefined
-        products.getById(req.params.id)
+        Products.getById(req.params.id)
             .then(result => {
                 if(result.length == 0) throw {code: "not_found", msg: `No Product with id ${req.params.id} found`}
                 req.body.image = req.imagePath == undefined? result[0].image: req.imagePath;
@@ -153,7 +163,7 @@ export default {
             .then(_ => variants.products(req.params.id))
             .then(savedVariants => {
                 tempVariants = savedVariants
-                return products.updateById(req.params.id, req.body)
+                return Products.updateById(req.params.id, req.body)
             })
             .then(_ => res.send({ 
                 msg: `Product edited with id:${req.params.id}`,
@@ -171,13 +181,13 @@ export default {
     },
 
     destroy: function(req, res, next) {
-        products.getById(req.params.id)
+        Products.getById(req.params.id)
             .then(result => {
                 if(result.length === 0) throw {code: "not_found", msg: `No Product with id ${req.params.id} found`};
                 if(result[0].image != null) return unlink(path.join(process.env.STORAGE_PATH, result[0].image))
                 return undefined;
             })
-            .then(_ => products.deleteById(req.params.id))
+            .then(_ => Products.deleteById(req.params.id))
             .then(_ =>  res.send({ msg: `Deleted Product with id: ${req.params.id}` }))
             .catch(err => next(err));
     },
