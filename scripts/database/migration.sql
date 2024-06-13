@@ -86,6 +86,7 @@ CREATE TABLE Transactions(
     `order_id` INTEGER,
     `invoice_number` VARCHAR(32) NOT NULL UNIQUE,
     `evidence_image` VARCHAR(64) DEFAULT NULL,
+    `evidence_accepted` BOOLEAN DEFAULT False,
     `method` ENUM("tunai", "transfer") NOT NULL,
     `total_items` INTEGER UNSIGNED NOT NULL,
     `total_price` INTEGER UNSIGNED NOT NULL,
