@@ -12,6 +12,10 @@ export default {
         status_code: 400,
         msg: "Server received a duplicate of duplicate-constrained data"
     },
+    "insufficient_stock": {
+        status_code: 400,
+        msg: "One or more CartItems ordered doesn't have enough stock in store"
+    },
     "unmatched_credentials": {
         status_code: 401, 
         msg: "Credentials given doesn't match"
