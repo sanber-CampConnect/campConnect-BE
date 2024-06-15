@@ -126,7 +126,7 @@ CREATE TABLE CartItems(
 
 CREATE TABLE OrderItems(
     `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-    `order_id` INTEGER NOT NULL,
+    `order_id` INTEGER,
     `variant_id` INTEGER,
     `count` INTEGER UNSIGNED NOT NULL,
     `rent_duration` INTEGER UNSIGNED NOT NULL,
