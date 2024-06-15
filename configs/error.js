@@ -40,6 +40,10 @@ export default {
         status_code: 403, 
         msg: "Account verification is needed"
     },
+    "illegal_operation": {
+        status_code: 403, 
+        msg: "Operaion is not allowed to be done to this resource"
+    },
     "not_found": {
         status_code: 404,
         msg: "Requested resource not found"
