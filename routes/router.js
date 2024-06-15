@@ -8,6 +8,7 @@ import profileRouter from "./profile.route.js"
 import userRouter from "./user.route.js";
 import variantsRouter from "./variants.route.js";
 import productsRouter from "./products.route.js";
+import carts from "./carts.route.js";
 import cartItems from "./cartItems.route.js";
 
 dotenv.config();
@@ -18,6 +19,7 @@ ROUTER.use("/users", userRouter);
 ROUTER.use("/categories", categoriesRouter);
 ROUTER.use("/variants", variantsRouter);
 ROUTER.use("/products", productsRouter);
+ROUTER.use("/carts", carts);
 ROUTER.use("/cartItems", cartItems);
 ROUTER.use("/assets", express.static(process.env.STORAGE_PATH))
 ROUTER.use("/assets/default", express.static(path.join("public", "img")));
