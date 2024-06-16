@@ -49,7 +49,7 @@ export default {
                     msg: `No Variant of product with id ${req.body.variant_id} had found`
                 }
 
-                const data = [ FILLABLES, FILLABLES.map(key => req.body[key])]
+                const data = [ [...FILLABLES], FILLABLES.map(key => req.body[key])]
                 const subtotal = (result[0].price
                     * Number(req.body.rent_duration)
                     * Number(req.body.count)
