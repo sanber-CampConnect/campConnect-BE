@@ -9,7 +9,7 @@ const productPricesql = [
     `SELECT`,
         `Products.price as price`,
     `FROM Products`,
-    `JOIN VARIANTS ON Products.id = Variants.product_id`,
+    `JOIN Variants ON Products.id = Variants.product_id`,
     `WHERE Variants.id = ?`
 ].join(" "); // LIMIT ${index*50},${(index+1)*50}
 
@@ -64,6 +64,8 @@ export default {
                 data: { 
                     id: result.insertId,
                     ...req.body,
+                    count: Number(req.body.count),
+                    rent_duration: Number(req.body.rent_duration),
                 }
             }))
             .catch(err => next(err));
@@ -102,6 +104,8 @@ export default {
                     data: {
                         id: Number(req.params.id),
                         ...req.body,
+                        count: Number(req.body.count),
+                        rent_duration: Number(req.body.rent_duration),
                     }
                 })
             })
