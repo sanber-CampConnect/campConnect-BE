@@ -49,7 +49,8 @@ export default {
             return next({code: "incomplete_request", msg: "Not enough data to process"})
         }
 
-
+        console.log(req.body)
+        console.log(productVariants)
         let productInsertId;
         const data = [ FILLABLES, FILLABLES.map(key => req.body[key])]
         Products.store(data)
