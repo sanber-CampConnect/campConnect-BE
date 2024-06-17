@@ -86,11 +86,12 @@ CREATE TABLE Transactions(
     `order_id` INTEGER,
     `invoice_number` VARCHAR(32) NOT NULL UNIQUE,
     `evidence_image` VARCHAR(64) DEFAULT NULL,
-    `status` ENUM("disetujui", "diproses", "ditolak") DEFAULT False,
+    `status` ENUM("disetujui", "diproses", "ditolak") DEFAULT "diproses",
     `note` VARCHAR(1024),
     `method` ENUM("tunai", "transfer") NOT NULL,
     `total_items` INTEGER UNSIGNED NOT NULL,
     `total_price` INTEGER UNSIGNED NOT NULL,
+    `last_update` DATETIME NOT NULL DEFAULT NOW()
 
     FOREIGN KEY (order_id)
         REFERENCES Orders(id)

@@ -47,7 +47,7 @@ BEGIN
     INSERT INTO Orders(`user_id`, `payment_due`)
         VALUES(iuser_id, DATE_ADD(NOW(), INTERVAL 3 DAY));
     SET onew_order_id = LAST_INSERT_ID();
-    INSERT INTO Transactions(`order_id` `invoice_number`, `method`, `total_price`, `total_items`) 
+    INSERT INTO Transactions(`order_id`, `invoice_number`, `method`, `total_price`, `total_items`) 
         VALUES(onew_order_id, iinvoice_number, imethod, itotal_price, itotal_items);
     SELECT onew_order_id AS insertId;
 END;
