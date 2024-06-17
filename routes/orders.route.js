@@ -9,7 +9,7 @@ ROUTER.get("/", admin_only_middlewares, controller.index);
 ROUTER.post("/", authenticated_only_middlewares, controller.store);
 ROUTER.get("/:id/items", [...authenticated_only_middlewares, isOrderOwner], controller.findOne);
 ROUTER.get("/:id", [...authenticated_only_middlewares, isOrderOwner], controller.findOne);
-// ROUTER.patch("/:id", [authenticated_only_middlewares, isOrderOwner], controller.updateStatus);
+ROUTER.patch("/:id", [admin_only_middlewares, isOrderOwner], controller.completeOrder);
 ROUTER.delete("/:id", [...authenticated_only_middlewares, isOrderOwner], controller.destroy);
 
 export default ROUTER;

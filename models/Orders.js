@@ -50,10 +50,11 @@ export default {
     },
 
     updateById: async (id, data) => {
-        const sql = (
-            `UPDATE ${TABLE_NAME} SET ? `
-            + `WHERE id = ? `
-        );
+        const sql = [
+            `UPDATE ${TABLE_NAME} SET ?`,
+            ", last_update = NOW()",
+            "WHERE id = ? "
+        ].join(" ");
         const params = [data, id]
         return await connection.query(sql, params);
     },

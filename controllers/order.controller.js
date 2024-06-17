@@ -58,7 +58,7 @@ export default {
             .then(result => {
                 if(result.length == 0) throw {
                     code: "not_found",
-                    msg: `Associated cart somehow didn't found for User with id ${req.user.id}`
+                    msg: `User with id ${req.user.id} is not found`
                 }
 
                 if(result[0].is_verified == 0) throw {
@@ -71,13 +71,12 @@ export default {
             .then(result => { 
                 if(result.length == 0) throw {
                     code: "not_found",
-                    msg: `Associated cart somehow didn't found for User with id ${req.user.id}`
+                    msg: `Associated 'Cart' somehow didn't found for User with id ${req.user.id}`
                 }
 
-                // Retrieve cartItems info
                 originCartId = result[0].id;
-                return DBConnection.query(
-                    "SELECT * FROM CartItems WHERE id IN (?)",
+                return DBConnection.query( 
+                    "SELECT * FROM CartItems WHERE id IN (?)", 
                     [req.body.cartItems]
                 )
             })
@@ -87,20 +86,20 @@ export default {
                     msg: "Certain items that want to be ordered doesn't exist"
                 }
 
-                orderedCartItems = cartItems
                 const itemsOwnedBySelf = cartItems.every(item => item.cart_id == originCartId)
                 if(!itemsOwnedBySelf) throw {
                     code: "not_owner",
                     msg: "Request contains CartItem owned by another user"
                 };
 
+                orderedCartItems = cartItems
                 return DBConnection.query(
                     "SELECT * FROM Variants WHERE id IN (?)",
                     [cartItems.map(item => item.variant_id)]
                 )
             })
-            .then(result => { 
-                const availableVariantsId = result.map(variant => variant.id)
+            .then(orderedVariants => { 
+                const availableVariantsId = orderedVariants.map(variant => variant.id)
                 const allVariantsAvailable = orderedCartItems
                                             .map(cartItem => cartItem.variant_id)
                                             .every(item => availableVariantsId.includes(item))
@@ -112,7 +111,7 @@ export default {
 
                 // Does the items that are going to be orderd still has enough stock or even available?
                 const variants = {}
-                result.forEach(variant => { variants[variant.id] = variant.stock })
+                orderedVariants.forEach(variant => { variants[variant.id] = variant.stock })
                 orderedCartItems.forEach(orderItem => {
                     const {variant_id, count, subtotal} = orderItem
                     if(count > variants[variant_id]) throw {
@@ -125,7 +124,7 @@ export default {
                     totalPrice += subtotal;
                 })
 
-                // Update stock based on what already ordered
+                // Reduce stock based on what already ordered
                 const orderedVariantId = []
                 const sqlCases = []
                 Object.entries(variants).forEach(entry => {
@@ -142,7 +141,7 @@ export default {
                 ].join(" ")
                 return DBConnection.query(sqlUpdateStock, [orderedVariantId])
             }) 
-            .then(_ => { // delete cartItems
+            .then(_ => { // delete cartItems that is being ordered
                 const sqlClearOrderedItems = "DELETE FROM CartItems WHERE id IN (?)"
                 return DBConnection.query(sqlClearOrderedItems, [orderedCartItems.map(item => item.id)])
             }) 
@@ -185,22 +184,12 @@ export default {
             .catch(err => next(err))
     },
 
-    /*
-    updateStatus: function(req, res, next) {
-        const ACCEPTED = ["status", "note"];
-        Object.keys(req.body).forEach(key => {
-            if(!ACCEPTED.includes(key)) delete req.body[key]
+    completeOrder: function(req, res, next) {
+        const {status} = req.body;
+        if(!["selesai", "dibatalkan"].includes(status)) return next({
+            code: "bad_request", 
+            msg: "status could only be either 'selesai' or 'dibatalkan'"
         })
-
-        if(Object.keys(req.body).length != ACCEPTED.length) {
-            return next({code: "incomplete_request", msg: "Not enough data to process"})
-        }
-
-        const {status, note} = req.body;
-        if(!["disetujui", "diproses", "ditolak"].includes(status)) throw {
-            code: "bad_request",
-            msg: "status could only be either one of {'disetujui', 'diproses', 'ditolak'}"
-        }
 
         const orderId = req.params.id
         let oldOrder = undefined
@@ -211,62 +200,103 @@ export default {
                     msg: `No Order with id ${orderId} found`
                 }
 
-                // Ended order doesn't need to be updated
-                if(["ditolak", "selesai"].includes(result[0].status)) throw {
+                oldOrder = result[0]
+                if(["dibatalkan", "selesai"].includes(oldOrder.status)) throw { // Completed order doesn't need to be updated
                     code: "illegal_operation",
-                    msg: "Completed order's status couldn't be updated"
+                    msg: "Completed order's status doesn't need to be updated"
+                }
+                
+                if(status == "dibatalkan") return undefined
+                else if(oldOrder.status == "belum_bayar") throw {
+                    code: "illegal_operation",
+                    msg: "Order couldn't declared as 'selesai' if its status is still 'belum_bayar'"
                 }
 
-                oldOrder = result[0]
                 oldOrder.status = status;
+                return DBConnection.query( "SELECT * FROM OrderItems WHERE order_id = ?", [oldOrder.id])
+            })
+            .then(orderedItems => { 
+                if(status == "dibatalkan") return undefined
+                return DBConnection.query( 
+                    "SELECT * FROM Rents WHERE orderItem_id IN (?)",
+                    [orderedItems.map(item => item.id)]
+                )
+            })
+            .then(rents => { 
+                if(status == "dibatalkan") return undefined;
 
-                const shouldRestoreStock = ["ditolak", "selesai"].includes(status)
-                if(!shouldRestoreStock) return undefined
+                // Does all rented item already returned?
+                // Note: `Rents` record only generated via `Transactions`
+                //      which implies, no completed `Transactions`, no `Rents` record
+                const allOrderedItemHasReturned = (
+                    rents.map(rentItem => rentItem.return_date)
+                        .every(return_date => {
+                            console.log(return_date)
+                            return return_date != undefined;
+                        })
+                );
+
+                if(!allOrderedItemHasReturned) throw {
+                    code: "illegal_operation",
+                    msg: "Only orders with all item returned could be declared as done"
+                }
                 return Orders.orderItems(orderId)
             })
-            .then(result => {
-                if(result == undefined) return undefined; 
-                if(result.length == 0) throw {
-                    code: "not_found",
-                    msg: `Certain orderItem associated with id ${orderId} could not be found`
-                }
+            .then(orderItems => { 
+                if(status != "dibatalkan") return undefined;
 
                 // Replenish stock
+                // Note: Items recovery outside cancelled order is handled via `Rents`
+                //      which could only be done if the item is already returned
+                const orderedVariantId = {}
+                orderItems.forEach(orderItem => {
+                    const {variant_id, orderItem_count: count} = orderItem
+                    orderedVariantId[variant_id] =  (
+                        orderedVariantId[variant_id] != undefined?
+                            orderedVariantId[variant_id] + count
+                            : count
+                    )
+                })
+
                 const sqlCases = []
                 const data = []
-                const orderedVariantId = []
-                result.forEach(orderItem => {
-                    const {variant_id, count} = orderItem
+                Object.keys(orderedVariantId).forEach(variant_id => {
                     sqlCases.push(`WHEN id = ${variant_id} THEN (stock + ?)`);
-                    data.push(count);
-                    orderedVariantId.push(variant_id)
+                    data.push(orderedVariantId[variant_id]);
                 })
 
                 const sqlUpdateStock = [
                     "UPDATE Variants",
                     "SET stock =",
                         `CASE ${sqlCases.join(" ")} END`,
-                    "WHERE id IN ?",
+                    "WHERE id IN (?)",
                 ].join(" ")
-                return DBConnection.query(sqlUpdateStock, [...data, orderedVariantId])
+                return DBConnection.query(sqlUpdateStock, [...data, Object.keys(orderedVariantId)])
             })
-            .then(() => Orders.updateById(orderId, req.body))
-            .then(() => res.status(201).send({
-                msg: `Order with id ${orderId} updated`,
+            .then(_ => Orders.updateById(orderId, {status: status}))
+            .then(_ => res.status(201).send({
+                msg: `Status of order with id ${orderId} updated`,
                 data: oldOrder
             }))
             .catch(err => next(err))
     },
-    */
+
     destroy: function(req, res, next) {
-        Orders.deleteById(req.params.id)
+        Orders.getById(req.params.id)
             .then(result => {
-                if(result.affectedRows == 0) throw {
+                if(result.length == 0) throw {
                     code: "not_found", 
                     msg: `No Order with id ${req.params.id} found`
                 }
-                return res.send({msg: `Deleted Order with id: ${req.params.id}`})
+
+                if(!["selesai", "dibatalkan"].includes(result[0].status)) throw {
+                    code: "illegal_operation",
+                    msg: "Could not delete uncompleted orders"
+                }
+
+                return Orders.deleteById(req.params.id)
             })
+            .then(result => res.send({msg: `Deleted Order with id: ${req.params.id}`}))
             .catch(err => next(err))
     },
 }
