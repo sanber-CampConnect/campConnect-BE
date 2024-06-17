@@ -1,7 +1,7 @@
 import Users from "../models/Users.js"
 
 export default function isVerifiedAccount(req, res, next) {
-    if(req.user.role == "admin") next()
+    if(req.user.role == "admin") return next()
 
     // TODO: make a stored procedure to do all of these things with one DB call
     Users.getById(req.user.id) 
@@ -16,7 +16,7 @@ export default function isVerifiedAccount(req, res, next) {
                 msg: "Check your email for verification link or request one if you don't receive one or it's already expired"
             }
 
-            next()
+            return next()
         })
         .catch(err => next(err))
 }

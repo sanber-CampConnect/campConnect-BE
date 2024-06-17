@@ -2,7 +2,7 @@ import Carts from "../models/Carts.js"
 import DBConnection from "../models/DBConnection.js";
 
 export default function isCartOwner(req, res, next) {
-    if(req.user.role == "admin") next()
+    if(req.user.role == "admin") return next()
 
     const cart_id = req.body.cart_id || req.params.id;
     DBConnection.query("SELECT * FROM Carts WHERE id=?", [cart_id])
@@ -17,7 +17,7 @@ export default function isCartOwner(req, res, next) {
                 msg: `Cart with id ${cart_id} belongs to other user`
             }
 
-            next();
+            return next();
         })
         .catch(err => next(err))
 }
