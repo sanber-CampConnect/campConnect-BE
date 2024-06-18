@@ -29,10 +29,28 @@ export default {
     },
 
     findOne: function(req, res, next) {
+        let product;
         Products.getById(req.params.id)
             .then(result => {
-                if(result.length == 0) throw {code: "not_found", msg: "No Product with specified id has found"}
-                return res.send({ data: result })
+                if(result.length == 0) throw {
+                    code: "not_found", 
+                    msg: "No Product with specified id has found"
+                }
+                product = result[0];
+                return Variants.products(req.params.id)
+            })
+            .then(variants => {
+                if(variants.length == 0) throw {
+                    code: "not_found",
+                    msg: `No variant for Product with id ${req.params.id} has found`
+                }
+
+                return res.send({ 
+                    data: {
+                        ...product,
+                        variants: variants
+                    }
+                })
             })
             .catch(err => next(err))
     },
