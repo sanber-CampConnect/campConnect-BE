@@ -12,6 +12,7 @@ import carts from "./carts.route.js";
 import cartItems from "./cartItems.route.js";
 import orderItems from "./orderItems.route.js";
 import orders from "./orders.route.js";
+import rents from "./rents.route.js";
 
 dotenv.config();
 const ROUTER = express.Router();
@@ -25,6 +26,7 @@ ROUTER.use("/carts", carts);
 ROUTER.use("/cartItems", cartItems);
 ROUTER.use("/orderItems", orderItems);
 ROUTER.use("/orders", orders);
+ROUTER.use("/rents", rents);
 ROUTER.use("/assets", express.static(process.env.STORAGE_PATH))
 ROUTER.use("/assets/default", express.static(path.join("public", "img")));
 ROUTER.use("/", (req, res, next) => next( {
