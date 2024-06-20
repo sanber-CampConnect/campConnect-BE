@@ -15,7 +15,9 @@ export default {
                 `${TRANSACTION_TABLE}.invoice_number as transaction_invoice_number`,
                 `${TRANSACTION_TABLE}.evidence_image as transaction_evidence_image`,
                 `${TRANSACTION_TABLE}.method as transaction_method`,
-                `${TRANSACTION_TABLE}.total_items as trasaction_item_count`,
+                `${TRANSACTION_TABLE}.status AS transaction_status`,
+                `${TRANSACTION_TABLE}.note AS transaction_note`,
+                `${TRANSACTION_TABLE}.total_items as transaction_item_count`,
                 `${TRANSACTION_TABLE}.total_price as transaction_total_price`
             ].join(", "),
             `FROM ${TABLE_NAME}`,
@@ -34,12 +36,14 @@ export default {
         const sql = [
             `SELECT`, [
                 `${TABLE_NAME}.*`,
-                `${TRANSACTION_TABLE}.id as transaction_id`,
-                `${TRANSACTION_TABLE}.invoice_number as transaction_invoice_number`,
-                `${TRANSACTION_TABLE}.evidence_image as transaction_evidence_image`,
-                `${TRANSACTION_TABLE}.method as transaction_method`,
-                `${TRANSACTION_TABLE}.total_items as trasaction_item_count`,
-                `${TRANSACTION_TABLE}.total_price as transaction_total_price`
+                `${TRANSACTION_TABLE}.id AS transaction_id`,
+                `${TRANSACTION_TABLE}.invoice_number AS transaction_invoice_number`,
+                `${TRANSACTION_TABLE}.evidence_image AS transaction_evidence_image`,
+                `${TRANSACTION_TABLE}.method AS transaction_method`,
+                `${TRANSACTION_TABLE}.status AS transaction_status`,
+                `${TRANSACTION_TABLE}.note AS transaction_note`,
+                `${TRANSACTION_TABLE}.total_items AS transaction_item_count`,
+                `${TRANSACTION_TABLE}.total_price AS transaction_total_price`
             ].join(", "),
             `FROM ${TABLE_NAME}`,
             `JOIN ${TRANSACTION_TABLE} ON ${TABLE_NAME}.id = ${TRANSACTION_TABLE}.order_id`,
@@ -70,7 +74,7 @@ export default {
             `SELECT`, [
                 `${PRODUCT_TABLE}.id AS product_id`,
                 `${PRODUCT_TABLE}.name AS product_name`,
-                `${PRODUCT_TABLE}.name AS product_unit_price`,
+                `${PRODUCT_TABLE}.price AS product_unit_price`,
                 `${VARIANT_TABLE}.id AS variant_id`,
                 `${VARIANT_TABLE}.name AS variant_name`,
                 `${ORDERITEM_TABLE}.count AS orderItem_count`,

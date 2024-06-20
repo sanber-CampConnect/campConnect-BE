@@ -13,13 +13,18 @@ CREATE PROCEDURE `User_add`(
     IN iusername VARCHAR(32),
     IN iemail VARCHAR(64),
     IN ipassword VARCHAR(64),
-    OUT onew_user_id INTEGER
+    OUT onew_user_id INTEGER,
+    OUT onew_cart_id INTEGER
 )
 BEGIN
     INSERT INTO Users( `fullname`, `username`, `email`, `password`)
         VALUES( ifullname, iusername, iemail, ipassword);
     SET onew_user_id = LAST_INSERT_ID();
     INSERT INTO Carts(`user_id`) VALUES( onew_user_id );
+    SET onew_cart_id = LAST_INSERT_ID();
+    SELECT 
+        onew_user_id AS userInsertId,
+        onew_cart_id AS cartInsertId;
 END;
 //
 
@@ -58,6 +63,7 @@ CREATE PROCEDURE `Order_delete`(
 )
 BEGIN
     DELETE FROM `Transactions` WHERE `order_id` = iorder_id;
+    DELETE FROM `Rents` WHERE `orderItem_id` IN (SELECT `id` FROM `OrderItems` WHERE `order_id` = iorder_id);
     DELETE FROM `OrderItems` WHERE `order_id` = iorder_id;
     DELETE FROM `Reviews` WHERE `order_id` = iorder_id;
     DELETE FROM `Orders` WHERE `id` = iorder_id;

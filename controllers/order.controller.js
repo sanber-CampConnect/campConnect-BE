@@ -289,14 +289,30 @@ export default {
                     msg: `No Order with id ${req.params.id} found`
                 }
 
-                if(!["selesai", "dibatalkan"].includes(result[0].status)) throw {
+                const oldOrder = result[0]
+                if(!["selesai", "dibatalkan"].includes(oldOrder.status)) throw {
                     code: "illegal_operation",
                     msg: "Could not delete uncompleted orders"
                 }
 
-                return Orders.deleteById(req.params.id)
+                return DBConnection.query(
+                    "SELECT * FROM Transactions WHERE id = ?",
+                    [oldOrder.id]
+                )
             })
-            .then(result => res.send({msg: `Deleted Order with id: ${req.params.id}`}))
+            .then(result => {
+                if(result.length == 0) throw {
+                    code: "not_found",
+                    msg: `Associated Transaction of Order with id of ${req.params.id} somehow could not be found`
+                }
+
+                const oldTransaction = result[0]
+                return (oldTransaction.evidence_image == null
+                    ? undefined
+                    : unlink( path.join(process.env.STORAGE_PATH, oldTransaction.evidence_image)))
+            })
+            .then(_ => Orders.deleteById(req.params.id))
+            .then(_ => res.send({msg: `Deleted Order with id: ${req.params.id}`}))
             .catch(err => next(err))
     },
 }
