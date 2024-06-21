@@ -10,7 +10,7 @@ export default {
             [
                 `${TABLE_NAME}.*`,
                 `${CART_TABLE}.id AS cart_id`,
-            ].join(", ")
+            ].join(", "),
             `FROM ${TABLE_NAME}`,
             `JOIN ${CART_TABLE} ON ${TABLE_NAME}.id = ${CART_TABLE}.user_id`
         ].join(" "); // LIMIT ${index*50},${(index+1)*50}
@@ -31,7 +31,7 @@ export default {
                 `${CART_TABLE}.id AS cart_id`,
             ].join(", "),
             `FROM ${TABLE_NAME}`,
-            `JOIN ${CART_TABLE} ON ${TABLE_NAME}.id = ${CART_TABLE}.user_id`
+            `JOIN ${CART_TABLE} ON ${TABLE_NAME}.id = ${CART_TABLE}.user_id`,
             `WHERE id = ?`,
         ].join(" "); // LIMIT ${index*50},${(index+1)*50}
         const params = [id];
