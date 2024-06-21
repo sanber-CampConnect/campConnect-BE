@@ -32,10 +32,20 @@ CREATE PROCEDURE `User_delete`(
     IN iuser_id INTEGER
 )
 BEGIN
+    DECLARE temp INT;
+
     DELETE FROM Notifications WHERE user_id = iuser_id;
     DELETE FROM Announcements WHERE user_id = iuser_id;
-    DELETE FROM Orders WHERE user_id = iuser_id;
+
+    /* DELETE orders made by this user */   
+    SELECT id INTO temp FROM Orders WHERE user_id = iuser_id;
+    CALL Order_delete(temp);
+
+    /* DELETE this user's cart*/   
+    SELECT id INTO temp FROM Carts WHERE user_id = iuser_id;
+    DELETE FROM CartItems WHERE cart_id = temp;
     DELETE FROM Carts WHERE user_id = iuser_id;
+
     DELETE FROM Users WHERE id = iuser_id;
 END;
 //

@@ -46,16 +46,17 @@ const register = function(req, res, next) {
             return bcrypt.hash(req.body["password"], 10)
         })
         .then(hashedPassword => {
-            req.body["password"] = hashedPassword
-            const newUserData = [FILLABLES, FILLABLES.map(key => req.body[key])];
+            req.body.password = hashedPassword
+            const newUserData = [FILLABLES.map(key => req.body[key])];
             return Users.store(newUserData)
         })
         .then(result => {
             newUser = {
-                id: result.insertId,
+                id: result[0][0].userInsertId,
                 fullname: req.body.fullname,
                 username: req.body.username,
                 email: req.body.email,
+                cart_id: result[0][0].cartInsertId
             }
             return composeVerificationEmail(req.body["email"])
         })

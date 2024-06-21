@@ -1,24 +1,39 @@
 import connection from "./DBConnection.js";
 
 const TABLE_NAME = "Users";
+const CART_TABLE = "Carts"
 
 export default {
     getAll: async function(index = 0) {
-        const sql = `SELECT * FROM ${TABLE_NAME}`; // LIMIT ${index*50},${(index+1)*50}
+        const sql = [
+            `SELECT`,
+            [
+                `${TABLE_NAME}.*`,
+                `${CART_TABLE}.id AS cart_id`,
+            ].join(", ")
+            `FROM ${TABLE_NAME}`,
+            `JOIN ${CART_TABLE} ON ${TABLE_NAME}.id = ${CART_TABLE}.user_id`
+        ].join(" "); // LIMIT ${index*50},${(index+1)*50}
         return await connection.query(sql)
     },
     
     store: async function(data) {
-        const sql = `INSERT INTO ${TABLE_NAME}(??) VALUES (?)`;
+        const placeholder = data.map(_ => "?").join(", ")
+        const sql = `CALL User_add(${placeholder}, @newUserId, @newCartId)`;
         return await connection.query(sql, data);
     },
 
     getById: async function(id) {
-        const sql = (
-            `SELECT * `
-                + `FROM ${TABLE_NAME} `
-                + `WHERE id = ?`
-        );
+        const sql = [
+            `SELECT`,
+            [
+                `${TABLE_NAME}.*`,
+                `${CART_TABLE}.id AS cart_id`,
+            ].join(", "),
+            `FROM ${TABLE_NAME}`,
+            `JOIN ${CART_TABLE} ON ${TABLE_NAME}.id = ${CART_TABLE}.user_id`
+            `WHERE id = ?`,
+        ].join(" "); // LIMIT ${index*50},${(index+1)*50}
         const params = [id];
         return await connection.query(sql, params);
     },
@@ -38,6 +53,7 @@ export default {
             `DELETE FROM ${TABLE_NAME} `
             + `WHERE id = ?`
         );
+        //`CALL User_delete(${id})`
         const params = [id];
         return await connection.query(sql, params);
     },
@@ -45,11 +61,16 @@ export default {
 
     // ::::::::::::::::::::::::: NON BOILERPLATE CRUD OPERATIONS :::::::::::::::::::::::::
     getByEmail: async function(email) {
-        const sql = (
-            `SELECT * `
-                + `FROM ${TABLE_NAME} `
-                + `WHERE email = ?`
-        );
+        const sql = [
+            `SELECT`,
+            [
+                `${TABLE_NAME}.*`,
+                `${CART_TABLE}.id AS cart_id`,
+            ].join(", "),
+            `FROM ${TABLE_NAME}`,
+            `JOIN ${CART_TABLE} ON ${TABLE_NAME}.id = ${CART_TABLE}.user_id`,
+            `WHERE email = ?`,
+        ].join(" "); // LIMIT ${index*50},${(index+1)*50}
         const params = [email];
         return await connection.query(sql, params);
     },
