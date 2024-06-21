@@ -32,7 +32,7 @@ export default {
             ].join(", "),
             `FROM ${TABLE_NAME}`,
             `JOIN ${CART_TABLE} ON ${TABLE_NAME}.id = ${CART_TABLE}.user_id`,
-            `WHERE id = ?`,
+            `WHERE ${TABLE_NAME}.id = ?`,
         ].join(" "); // LIMIT ${index*50},${(index+1)*50}
         const params = [id];
         return await connection.query(sql, params);
@@ -69,7 +69,7 @@ export default {
             ].join(", "),
             `FROM ${TABLE_NAME}`,
             `JOIN ${CART_TABLE} ON ${TABLE_NAME}.id = ${CART_TABLE}.user_id`,
-            `WHERE email = ?`,
+            `WHERE ${TABLE_NAME}.email = ?`,
         ].join(" "); // LIMIT ${index*50},${(index+1)*50}
         const params = [email];
         return await connection.query(sql, params);
