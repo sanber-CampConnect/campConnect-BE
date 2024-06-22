@@ -7,9 +7,9 @@ import { authenticated_only_middlewares, admin_only_middlewares } from "../confi
 const ROUTER = express.Router();
 ROUTER.get("/", admin_only_middlewares, controller.index);
 ROUTER.post("/", authenticated_only_middlewares, controller.store);
-ROUTER.get("/:id/items", [...authenticated_only_middlewares, isOrderOwner], controller.findOne);
 ROUTER.get("/:id", [...authenticated_only_middlewares, isOrderOwner], controller.findOne);
-ROUTER.patch("/:id", [admin_only_middlewares, isOrderOwner], controller.completeOrder);
+ROUTER.patch("/:id/cancel", [...authenticated_only_middlewares, isOrderOwner], controller.cancelOrder);
+ROUTER.patch("/:id", admin_only_middlewares, controller.completeOrder);
 ROUTER.delete("/:id", [...authenticated_only_middlewares, isOrderOwner], controller.destroy);
 
 export default ROUTER;

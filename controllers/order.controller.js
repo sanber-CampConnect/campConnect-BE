@@ -184,16 +184,9 @@ export default {
             .catch(err => next(err))
     },
 
-    completeOrder: function(req, res, next) {
-        const {status} = req.body;
-        if(!["selesai", "dibatalkan"].includes(status)) return next({
-            code: "bad_request", 
-            msg: "status could only be either 'selesai' or 'dibatalkan'"
-        })
-
-        const orderId = req.params.id
+    cancelOrder: function(req, res, next) {
         let oldOrder = undefined
-        Orders.getById(orderId)
+        Orders.getById(req.params.id)
             .then(result => {
                 if(result.length == 0) throw {
                     code: "not_found",
@@ -201,50 +194,15 @@ export default {
                 }
 
                 oldOrder = result[0]
-                if(["dibatalkan", "selesai"].includes(oldOrder.status)) throw { // Completed order doesn't need to be updated
+                if(oldOrder.status != "belum_bayar") throw { // Completed order doesn't need to be updated
                     code: "illegal_operation",
-                    msg: "Completed order's status doesn't need to be updated"
-                }
-                
-                if(status == "dibatalkan") return undefined
-                else if(oldOrder.status == "belum_bayar") throw {
-                    code: "illegal_operation",
-                    msg: "Order couldn't declared as 'selesai' if its status is still 'belum_bayar'"
+                    msg: "Ongoing or done order's status shouldn't be cancelled"
                 }
 
-                oldOrder.status = status;
+                oldOrder.status = "dibatalkan";
                 return DBConnection.query( "SELECT * FROM OrderItems WHERE order_id = ?", [oldOrder.id])
             })
-            .then(orderedItems => { 
-                if(status == "dibatalkan") return undefined
-                return DBConnection.query( 
-                    "SELECT * FROM Rents WHERE orderItem_id IN (?)",
-                    [orderedItems.map(item => item.id)]
-                )
-            })
-            .then(rents => { 
-                if(status == "dibatalkan") return undefined;
-
-                // Does all rented item already returned?
-                // Note: `Rents` record only generated via `Transactions`
-                //      which implies, no completed `Transactions`, no `Rents` record
-                const allOrderedItemHasReturned = (
-                    rents.map(rentItem => rentItem.return_date)
-                        .every(return_date => {
-                            console.log(return_date)
-                            return return_date != undefined;
-                        })
-                );
-
-                if(!allOrderedItemHasReturned) throw {
-                    code: "illegal_operation",
-                    msg: "Only orders with all item returned could be declared as done"
-                }
-                return Orders.orderItems(orderId)
-            })
-            .then(orderItems => { 
-                if(status != "dibatalkan") return undefined;
-
+            .then(orderItems => {
                 // Replenish stock
                 // Note: Items recovery outside cancelled order is handled via `Rents`
                 //      which could only be done if the item is already returned
@@ -273,9 +231,60 @@ export default {
                 ].join(" ")
                 return DBConnection.query(sqlUpdateStock, [...data, Object.keys(orderedVariantId)])
             })
-            .then(_ => Orders.updateById(orderId, {status: status}))
+            .then(_ => Orders.updateById(oldOrder.id, {status: oldOrder.status}))
             .then(_ => res.status(201).send({
-                msg: `Status of order with id ${orderId} updated`,
+                msg: `Status of order with id ${oldOrder.id} updated`,
+                data: oldOrder
+            }))
+            .catch(err => next(err))
+    },
+
+    completeOrder: function(req, res, next) {
+        let oldOrder = undefined
+        Orders.getById(req.params.id)
+            .then(result => {
+                if(result.length == 0) throw {
+                    code: "not_found",
+                    msg: `No Order with id ${orderId} found`
+                }
+
+                oldOrder = result[0]
+                if(["dibatalkan", "selesai"].includes(oldOrder.status)) throw { // Completed order doesn't need to be updated
+                    code: "illegal_operation",
+                    msg: "Completed order's status doesn't need to be updated"
+                }
+                else if(oldOrder.status == "belum_bayar") throw {
+                    code: "illegal_operation",
+                    msg: "Order couldn't declared as 'selesai' if its status is still 'belum_bayar'"
+                }
+
+                oldOrder.status = "selesai";
+                return DBConnection.query( "SELECT * FROM OrderItems WHERE order_id = ?", [oldOrder.id])
+            })
+            .then(orderedItems => DBConnection.query( 
+                "SELECT * FROM Rents WHERE orderItem_id IN (?)",
+                [orderedItems.map(item => item.id)]
+            ))
+            .then(rents => { 
+                // Does all rented item already returned?
+                // Note: `Rents` record only generated via `Transactions`
+                //      which implies: No completed `Transactions`, no `Rents` record
+                const allOrderedItemHasReturned = (
+                    rents.map(rentItem => rentItem.return_date)
+                        .every(return_date => {
+                            console.log(return_date)
+                            return return_date != undefined;
+                        })
+                );
+
+                if(!allOrderedItemHasReturned) throw {
+                    code: "illegal_operation",
+                    msg: "Only orders with all item returned could be declared as done"
+                }
+                return Orders.updateById(oldOrder.id, {status: oldOrder.status})
+            })
+            .then(_ => res.status(201).send({
+                msg: `Status of order with id ${oldOrder.id} updated`,
                 data: oldOrder
             }))
             .catch(err => next(err))
