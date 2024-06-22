@@ -290,6 +290,15 @@ export default {
             .catch(err => next(err))
     },
 
+    findByUserId: function(req, res, next) {
+        Orders.byUserId(req.user.id)
+            .then(result => res.send({
+                msg: "Order fetch by user id success",
+                data: result
+            }))
+            .catch(err => next(err))
+    },
+
     destroy: function(req, res, next) {
         Orders.getById(req.params.id)
             .then(result => {

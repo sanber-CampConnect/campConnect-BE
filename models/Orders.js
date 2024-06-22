@@ -90,5 +90,26 @@ export default {
         ].join(" ");
         const params = [order_id];
         return await connection.query(sql, params);
+    },
+
+    byUserId: async function(userId) {
+        const sql = [
+            `SELECT`, [
+                `${TABLE_NAME}.*`,
+                `${TRANSACTION_TABLE}.id AS transaction_id`,
+                `${TRANSACTION_TABLE}.invoice_number AS transaction_invoice_number`,
+                `${TRANSACTION_TABLE}.evidence_image AS transaction_evidence_image`,
+                `${TRANSACTION_TABLE}.method AS transaction_method`,
+                `${TRANSACTION_TABLE}.status AS transaction_status`,
+                `${TRANSACTION_TABLE}.note AS transaction_note`,
+                `${TRANSACTION_TABLE}.total_items AS transaction_item_count`,
+                `${TRANSACTION_TABLE}.total_price AS transaction_total_price`
+            ].join(", "),
+            `FROM ${TABLE_NAME}`,
+            `JOIN ${TRANSACTION_TABLE} ON ${TABLE_NAME}.id = ${TRANSACTION_TABLE}.order_id`,
+            `WHERE ${TABLE_NAME}.user_id = ?`
+        ].join(" "); // LIMIT ${index*50},${(index+1)*50}
+        const params = [userId];
+        return await connection.query(sql, params);
     }
 }
