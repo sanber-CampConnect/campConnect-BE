@@ -10,15 +10,21 @@ export default {
     },
 
     findOne: function(req, res, next) {
+        let cart;
         model.getById(req.params.id)
             .then(result => {
                 if(result.length == 0) throw {
                     code: "not_found", 
                     msg: "No Cart with specified id has found"
                 }
-                return res.send({ data: result[0] })
+                cart = result[0];
+                return model.getCartItems(req.params.id);
             })
-            .catch(err => next(err))
+            .then(cartItems => {
+                cart.items = cartItems;
+                res.send({ data: cart });
+            })
+            .catch(err => next(err));
     },
     
     store: function(req, res, next) {
