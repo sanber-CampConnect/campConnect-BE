@@ -208,7 +208,7 @@ export default {
                 //      which could only be done if the item is already returned
                 const orderedVariantId = {}
                 orderItems.forEach(orderItem => {
-                    const {variant_id, orderItem_count: count} = orderItem
+                    const {variant_id, count} = orderItem
                     orderedVariantId[variant_id] =  (
                         orderedVariantId[variant_id] != undefined?
                             orderedVariantId[variant_id] + count
