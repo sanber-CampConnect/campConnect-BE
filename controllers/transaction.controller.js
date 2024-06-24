@@ -43,14 +43,32 @@ export default {
                     code: "illegal_operation",
                     msg: `Accepted Transaction couldn't be edited again`
                 }
+                return Orders.getById(oldTransaction.order_id)
+            })
+            .then(result => { // Update order's info while getting user's id for sending email
+                if(result.length == 0) throw {
+                    code: "not_found",
+                    msg: `Order with id ${oldTransaction.order_id} somehow not found during transaction update process`
+                }
 
+                associatedOrder = result[0]
                 const sql = "SELECT * FROM OrderItems WHERE order_id = ?";
                 return DBConnection.query(sql, [oldTransaction.order_id])
             })
             .then(orderItems => {
                 const orderInfo = [];
+                const rentStartDate = new Date(associatedOrder.rent_start);
+                const todaysDate = new Date();
+                if(rentStartDate < todaysDate) throw {
+                    code: "illegal_operation",
+                    msg: `Order wants to start renting on ${associatedOrder.rent_start.toISOString()}, but the date is behind today's date (${todaysDate.toISOString()})`
+                }
+
                 orderItems.forEach(orderItem => {
+                    // Ensure during the time of transaction acceptance, all item's rent_start are still not behind today's date
                     orderInfo.push(orderItem.id);
+                    orderInfo.push(associatedOrder.rent_start);
+                    orderInfo.push(associatedOrder.rent_start);
                     orderInfo.push(orderItem.rent_duration);
                 })
 
@@ -58,7 +76,7 @@ export default {
                 const sql = [
                     "INSERT INTO Rents(??)",
                         "VALUES",
-                        orderItems.map(_ => "(?, NOW(), DATE_ADD(NOW(), INTERVAL ? DAY))") .join(", ")
+                        orderItems.map(_ => "(?, ?, DATE_ADD(?, INTERVAL ? DAY))") .join(", ")
                 ].join(" ")
                 const data = [ ["orderItem_id", "rent_start", "rent_due"], ...orderInfo]
                 return DBConnection.query(sql, data)
@@ -68,16 +86,7 @@ export default {
                 oldTransaction.note = req.body.note
                 return Transactions.updateById(oldTransaction.id, oldTransaction);
             })
-            .then(_ => Orders.getById(oldTransaction.order_id))
-            .then(result => { // Update order's info while getting user's id for sending email
-                if(result.length == 0) throw {
-                    code: "not_found",
-                    msg: `Order with id ${oldTransaction.orderInfo} somehow not found during transaction update process`
-                }
-
-                associatedOrder = result[0]
-                return Orders.updateById(associatedOrder.id, {status: "sedang_disewa"})
-            })
+            .then(_ =>  Orders.updateById(associatedOrder.id, {status: "sedang_disewa"}))
             .then(_ => Users.getById(associatedOrder.user_id))
             .then(result => {
                 if(result.length == 0) throw {

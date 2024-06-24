@@ -34,7 +34,7 @@ export default {
     },
     
     store: function(req, res, next) {
-        const ACCEPTED = ["method", "cartItems"];
+        const ACCEPTED = ["method", "cartItems", "rent_start"];
         Object.keys(req.body).forEach(key => {
             if(!ACCEPTED.includes(key)) delete req.body[key]
         })
@@ -44,8 +44,18 @@ export default {
         }
 
         if(req.body.cartItems.length == 0) throw {
-            code: "illegal_operation",
+            code: "bad_request",
             msg: "No cartItems to be processed"
+        }
+
+        const orderDate = new Date(req.body.rent_start);
+        const isValidDate = (
+            (orderDate instanceof Date && !isNaN(orderDate)) // Ensure correct date. Refer: https://stackoverflow.com/questions/1353684/detecting-an-invalid-date-date-instance-in-javascript
+            && orderDate.setHours(0, 0, 0, 0) >= (new Date()) // Ensure rent_date is not behind current date
+        )
+        if(!isValidDate) throw {
+            code: "bad_request",
+            msg: "`rent_date` is invalid. Make sure the date is using ISO format and not before today's date"
         }
 
         let totalItems = 0;
@@ -147,7 +157,7 @@ export default {
             }) 
             .then(_ => { 
                 const INVOICE_NUMBER = `INV_${crypto.randomBytes(14).toString("hex")}`
-                const data = [req.user.id, INVOICE_NUMBER, req.body.method, totalItems, totalPrice]
+                const data = [req.user.id, INVOICE_NUMBER, req.body.method, totalItems, totalPrice, req.body.rent_start]
                 return Orders.store(data)
             })
             .then(result => {
@@ -175,6 +185,7 @@ export default {
                         method: req.body.method,
                         totalItems: totalItems,
                         totalPrice: totalPrice,
+                        rent_start: req.body.rent_start,
                         orderItems: orderedCartItems.map((value, idx) => (
                             { id: orderItemsInsertId[idx], ...value }
                         ))
