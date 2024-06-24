@@ -124,8 +124,8 @@ export default {
             .then(result => {
                 if(result.length == 0) throw {code: "not_found", msg: `No Product with id ${req.params.id} found`}
 
-                const hasReplacementImage = req.imagePath != undefined
-                return (hasReplacementImage?
+                const hasToReplaceImage = req.imagePath != undefined && result[0].image != null
+                return (hasToReplaceImage?
                     unlink(path.join(process.env.STORAGE_PATH, result[0].image)) 
                     : undefined
                 )
