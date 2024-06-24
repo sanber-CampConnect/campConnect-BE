@@ -74,6 +74,7 @@ CREATE TABLE Orders(
     `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
     `user_id` INTEGER NOT NULL,
     `payment_due` DATETIME NOT NULL,
+    `rent_start` DATETIME NOT NULL DEFAULT NOW(),
     `status` ENUM("belum_bayar", "sedang_disewa", "selesai", "dibatalkan") NOT NULL DEFAULT "belum_bayar",
     `last_update` DATETIME NOT NULL DEFAULT NOW(),
 

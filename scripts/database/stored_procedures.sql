@@ -56,11 +56,12 @@ CREATE PROCEDURE `Order_add`(
     IN imethod VARCHAR(8),
     IN itotal_items INTEGER UNSIGNED,
     IN itotal_price INTEGER UNSIGNED,
+    IN irent_start DATETIME,
     OUT onew_order_id INTEGER
 )
 BEGIN
-    INSERT INTO Orders(`user_id`, `payment_due`)
-        VALUES(iuser_id, DATE_ADD(NOW(), INTERVAL 3 DAY));
+    INSERT INTO Orders(`user_id`, `payment_due`, `rent_start`)
+        VALUES(iuser_id, DATE_ADD(NOW(), INTERVAL 3 DAY), irent_start);
     SET onew_order_id = LAST_INSERT_ID();
     INSERT INTO Transactions(`order_id`, `invoice_number`, `method`, `total_price`, `total_items`) 
         VALUES(onew_order_id, iinvoice_number, imethod, itotal_price, itotal_items);
