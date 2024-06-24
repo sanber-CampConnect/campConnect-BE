@@ -1,5 +1,6 @@
 import Rents from "../models/Rents.js";
 import OrderItems from "../models/OrderItems.js";
+import DBConnection from "../models/DBConnection.js";
 
 export default {
   index: function(req, res, next) {
@@ -128,5 +129,47 @@ export default {
         log: err
       });
     }
+  },
+
+  finishRent: function(req, res, next) {
+    let rentRecord;
+    Rents.getById(req.params.id)
+      .then(result => {
+        if(result.length == 0) throw {
+          code: "not_found",
+          msg: `Rent with id ${req.params.id} doesn't found`
+        }
+
+        rentRecord = result[0]
+        if(rentRecord.return_date != null) throw {
+          code: "illegal_operation",
+          msg: "Rent with returned item doesn't need to be updated"
+        }
+
+        return DBConnection.query("SELECT * FROM OrderItems WHERE id = ?", [rentRecord.orderItem_id])
+      })
+      .then(result => {
+        if(result.length == 0) throw {
+          code: "not_found",
+          msg: `OrderItem with id ${rentRecord.orderItem_id} somehow could not be found `
+        }
+
+        const sql = "UPDATE Variants SET stock = stock + ? WHERE id = ?";
+        const data = [result[0].count, result[0].variant_id]
+        return DBConnection.query(sql, data);
+      })
+      .then(_ => {
+        const sql = "UPDATE Rents SET return_date = NOW() WHERE id = ?"
+        const data = [req.params.id]
+        return DBConnection.query(sql, data)
+      })
+      .then(_ => res.send({
+        msg: `Rent with id ${req.params.id} has been updated and finished`,
+        data: {
+          ...rentRecord,
+          return_date: new Date().toISOString()
+        }
+      }))
+      .catch(err => next(err))
   }
 }
