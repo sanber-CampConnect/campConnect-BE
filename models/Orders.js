@@ -5,6 +5,7 @@ const VARIANT_TABLE = "Variants";
 const TRANSACTION_TABLE = "Transactions";
 const ORDERITEM_TABLE = "OrderItems";
 const PRODUCT_TABLE = "Products";
+const RENT_TABLE = "Rents"
 
 export default {
     getAll: async function(index = 0) {
@@ -80,12 +81,15 @@ export default {
                 `${ORDERITEM_TABLE}.count AS orderItem_count`,
                 `${ORDERITEM_TABLE}.rent_duration AS orderItem_rent_duration`,
                 `${ORDERITEM_TABLE}.subtotal AS orderItem_subtotal`,
-                //`${TABLE_NAME}.*`,
+                `${RENT_TABLE}.rent_start AS rent_start`,
+                `${RENT_TABLE}.rent_due AS rent_due`,
+                `${RENT_TABLE}.return_date AS rent_return_date`,
             ].join(", "),
             `FROM ${ORDERITEM_TABLE} `,
             `JOIN ${VARIANT_TABLE} ON ${ORDERITEM_TABLE}.variant_id = ${VARIANT_TABLE}.id`,
             `JOIN ${PRODUCT_TABLE} ON ${VARIANT_TABLE}.product_id = ${PRODUCT_TABLE}.id`,
             `JOIN ${TABLE_NAME} ON ${ORDERITEM_TABLE}.order_id = ${TABLE_NAME}.id`,
+            `LEFT JOIN ${RENT_TABLE} ON ${RENT_TABLE}.orderItem_id = ${ORDERITEM_TABLE}.id`,
             `WHERE ${ORDERITEM_TABLE}.order_id = ?`
         ].join(" ");
         const params = [order_id];
